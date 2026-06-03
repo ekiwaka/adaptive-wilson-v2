@@ -1,0 +1,41 @@
+study_name: coauthor_physics_graph_visualization
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 1
+  deterministic: true
+
+output:
+  root: outputs
+  experiment_name: graph_visualization/coauthor_physics
+  save_checkpoints: false
+  overwrite: true
+  append_timestamp: false
+  timestamp_format: "%Y_%m_%d_%H_%M_%S"
+
+logging:
+  level: INFO
+  log_to_stdout: true
+
+data:
+  root: data
+  split_idx: 0
+  standardize_features: false
+  split:
+    mode: predefined
+    val_ratio_of_remaining: 0.10
+  datasets: [coauthor/physics]
+  feature_modes: [enabled]
+
+visualization:
+  max_nodes: 35000
+  subgraph_method: largest_component
+  layout: spring
+  color_by: label
+  node_size_by: constant
+  node_size: 1.0
+  edge_alpha: 0.05
+  node_alpha: 0.84
+  output_format: svg
+  dpi: 300

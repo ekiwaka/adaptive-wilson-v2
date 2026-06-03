@@ -1,0 +1,134 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "tolokers": {
+      "dataset_name": "tolokers",
+      "num_candidate_nodes": 11758,
+      "num_nodes": 11758,
+      "q_by_budget_count": {
+        "1176": {
+          "budget_value": 0.1,
+          "max_iters": 20,
+          "mean_raw_roots": 1155.8333333333333,
+          "q": 1.2695312598730468,
+          "relative_error": 0.01714852607709757,
+          "requested_budget": 1176,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1764": {
+          "budget_value": 0.15,
+          "max_iters": 20,
+          "mean_raw_roots": 1762.75,
+          "q": 2.343750009765625,
+          "relative_error": 0.0007086167800453515,
+          "requested_budget": 1764,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "2352": {
+          "budget_value": 0.2,
+          "max_iters": 20,
+          "mean_raw_roots": 2394.3333333333335,
+          "q": 3.9062500096093755,
+          "relative_error": 0.01799886621315199,
+          "requested_budget": 2352,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "2940": {
+          "budget_value": 0.25,
+          "max_iters": 20,
+          "mean_raw_roots": 2864.75,
+          "q": 5.468750009453125,
+          "relative_error": 0.025595238095238095,
+          "requested_budget": 2940,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "3527": {
+          "budget_value": 0.3,
+          "max_iters": 20,
+          "mean_raw_roots": 3466.3333333333335,
+          "q": 7.81250000921875,
+          "relative_error": 0.017200642661374117,
+          "requested_budget": 3527,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "4115": {
+          "budget_value": 0.35,
+          "max_iters": 20,
+          "mean_raw_roots": 4006.4166666666665,
+          "q": 10.93750000890625,
+          "relative_error": 0.02638720129607132,
+          "requested_budget": 4115,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "4703": {
+          "budget_value": 0.4,
+          "max_iters": 20,
+          "mean_raw_roots": 4702.916666666667,
+          "q": 15.6250000084375,
+          "relative_error": 1.7719186334899036e-05,
+          "requested_budget": 4703,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "5291": {
+          "budget_value": 0.45,
+          "max_iters": 20,
+          "mean_raw_roots": 5320.083333333333,
+          "q": 21.8750000078125,
+          "relative_error": 0.00549675549675544,
+          "requested_budget": 5291,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "5879": {
+          "budget_value": 0.5,
+          "max_iters": 20,
+          "mean_raw_roots": 6039.916666666667,
+          "q": 31.250000006875,
+          "relative_error": 0.027371435051312634,
+          "requested_budget": 5879,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "6467": {
+          "budget_value": 0.55,
+          "max_iters": 20,
+          "mean_raw_roots": 6386.666666666667,
+          "q": 37.50000000625,
+          "relative_error": 0.012422040101025673,
+          "requested_budget": 6467,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "7055": {
+          "budget_value": 0.6,
+          "max_iters": 20,
+          "mean_raw_roots": 6968.583333333333,
+          "q": 50.000000005,
+          "relative_error": 0.012248995983935786,
+          "requested_budget": 7055,
+          "tolerance": 0.03,
+          "trials": 12
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 20,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 12,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc/tolokers_budget_sweep_static_normalised_weights_mc.yaml",
+  "version": 1
+}

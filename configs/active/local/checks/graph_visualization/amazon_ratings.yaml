@@ -1,0 +1,42 @@
+study_name: graph_visualization_amazon_ratings_full
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 2
+  deterministic: true
+
+output:
+  root: outputs/active/local/checks
+  experiment_name: graph_visualization_amazon_ratings_full
+  save_checkpoints: false
+  overwrite: true
+
+logging:
+  level: INFO
+  log_to_stdout: true
+
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  datasets:
+  - amazon-ratings
+  feature_modes:
+  - enabled
+  split:
+    mode: public
+
+visualization:
+  max_nodes: 30000
+  subgraph_method: full_graph
+  layout: spring
+  color_by: label
+  node_size_by: constant
+  node_size: 2
+  edge_alpha: 0.01
+  node_alpha: 0.6
+  label_nodes: false
+  label_with: label
+  output_format: png
+  dpi: 300

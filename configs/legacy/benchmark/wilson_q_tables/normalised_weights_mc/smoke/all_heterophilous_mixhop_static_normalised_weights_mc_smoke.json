@@ -1,0 +1,214 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "actor": {
+      "dataset_name": "actor",
+      "num_candidate_nodes": 7600,
+      "num_nodes": 7600,
+      "q_by_budget_count": {
+        "760": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 753.5,
+          "q": 0.024414072497558593,
+          "relative_error": 0.008552631578947369,
+          "requested_budget": 760,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "amazon-ratings": {
+      "dataset_name": "amazon-ratings",
+      "num_candidate_nodes": 24492,
+      "num_nodes": 24492,
+      "q_by_budget_count": {
+        "2449": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 2456.75,
+          "q": 0.4394531349560547,
+          "relative_error": 0.0031645569620253164,
+          "requested_budget": 2449,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "minesweeper": {
+      "dataset_name": "minesweeper",
+      "num_candidate_nodes": 10000,
+      "num_nodes": 10000,
+      "q_by_budget_count": {
+        "1000": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 1000.75,
+          "q": 0.6347656349365234,
+          "relative_error": 0.00075,
+          "requested_budget": 1000,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "questions": {
+      "dataset_name": "questions",
+      "num_candidate_nodes": 48921,
+      "num_nodes": 48921,
+      "q_by_budget_count": {
+        "4892": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 4691.75,
+          "q": 0.14648438498535157,
+          "relative_error": 0.040934178250204414,
+          "requested_budget": 4892,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "roman-empire": {
+      "dataset_name": "roman-empire",
+      "num_candidate_nodes": 22662,
+      "num_nodes": 22662,
+      "q_by_budget_count": {
+        "2266": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 2326.75,
+          "q": 0.09765625999023438,
+          "relative_error": 0.02680935569285084,
+          "requested_budget": 2266,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "tolokers": {
+      "dataset_name": "tolokers",
+      "num_candidate_nodes": 11758,
+      "num_nodes": 11758,
+      "q_by_budget_count": {
+        "1176": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 1153.25,
+          "q": 1.2695312598730468,
+          "relative_error": 0.019345238095238096,
+          "requested_budget": 1176,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "webkb/cornell": {
+      "dataset_name": "webkb/cornell",
+      "num_candidate_nodes": 183,
+      "num_nodes": 183,
+      "q_by_budget_count": {
+        "18": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 95.25,
+          "q": 0.024414072497558593,
+          "relative_error": 4.291666666666667,
+          "requested_budget": 18,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "webkb/texas": {
+      "dataset_name": "webkb/texas",
+      "num_candidate_nodes": 183,
+      "num_nodes": 183,
+      "q_by_budget_count": {
+        "18": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 82.75,
+          "q": 0.024414072497558593,
+          "relative_error": 3.5972222222222223,
+          "requested_budget": 18,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "webkb/wisconsin": {
+      "dataset_name": "webkb/wisconsin",
+      "num_candidate_nodes": 251,
+      "num_nodes": 251,
+      "q_by_budget_count": {
+        "25": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 97.75,
+          "q": 0.024414072497558593,
+          "relative_error": 2.91,
+          "requested_budget": 25,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "wikipedia/chameleon": {
+      "dataset_name": "wikipedia/chameleon",
+      "num_candidate_nodes": 2277,
+      "num_nodes": 2277,
+      "q_by_budget_count": {
+        "228": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 225.0,
+          "q": 0.5371093849462891,
+          "relative_error": 0.013157894736842105,
+          "requested_budget": 228,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "wikipedia/squirrel": {
+      "dataset_name": "wikipedia/squirrel",
+      "num_candidate_nodes": 5201,
+      "num_nodes": 5201,
+      "q_by_budget_count": {
+        "520": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 532.25,
+          "q": 0.6835937599316406,
+          "relative_error": 0.023557692307692307,
+          "requested_budget": 520,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 12,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 4,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc_smoke/all_heterophilous_mixhop_static_normalised_weights_mc_smoke.yaml",
+  "version": 1
+}

@@ -1,0 +1,134 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "roman-empire": {
+      "dataset_name": "roman-empire",
+      "num_candidate_nodes": 22662,
+      "num_nodes": 22662,
+      "q_by_budget_count": {
+        "10198": {
+          "budget_value": 0.45,
+          "max_iters": 20,
+          "mean_raw_roots": 10033.583333333334,
+          "q": 1.56250000984375,
+          "relative_error": 0.01612244230894941,
+          "requested_budget": 10198,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "11331": {
+          "budget_value": 0.5,
+          "max_iters": 20,
+          "mean_raw_roots": 11016.5,
+          "q": 1.9531250098046877,
+          "relative_error": 0.02775571441179066,
+          "requested_budget": 11331,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "12464": {
+          "budget_value": 0.55,
+          "max_iters": 20,
+          "mean_raw_roots": 12546.166666666666,
+          "q": 2.7343750097265627,
+          "relative_error": 0.006592319212665762,
+          "requested_budget": 12464,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "13597": {
+          "budget_value": 0.6,
+          "max_iters": 20,
+          "mean_raw_roots": 13686.5,
+          "q": 3.5156250096484376,
+          "relative_error": 0.006582334338457013,
+          "requested_budget": 13597,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "2266": {
+          "budget_value": 0.1,
+          "max_iters": 20,
+          "mean_raw_roots": 2300.0,
+          "q": 0.09765625999023438,
+          "relative_error": 0.01500441306266549,
+          "requested_budget": 2266,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "3399": {
+          "budget_value": 0.15,
+          "max_iters": 20,
+          "mean_raw_roots": 3429.5833333333335,
+          "q": 0.19531250998046876,
+          "relative_error": 0.008997744434637684,
+          "requested_budget": 3399,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "4532": {
+          "budget_value": 0.2,
+          "max_iters": 20,
+          "mean_raw_roots": 4533.833333333333,
+          "q": 0.31738282246826177,
+          "relative_error": 0.0004045307443365027,
+          "requested_budget": 4532,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "5666": {
+          "budget_value": 0.25,
+          "max_iters": 20,
+          "mean_raw_roots": 5705.083333333333,
+          "q": 0.4882812599511719,
+          "relative_error": 0.006897870337686733,
+          "requested_budget": 5666,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "6799": {
+          "budget_value": 0.3,
+          "max_iters": 20,
+          "mean_raw_roots": 6786.833333333333,
+          "q": 0.6835937599316406,
+          "relative_error": 0.0017894788449282202,
+          "requested_budget": 6799,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "7932": {
+          "budget_value": 0.35,
+          "max_iters": 20,
+          "mean_raw_roots": 8089.166666666667,
+          "q": 0.9765625099023438,
+          "relative_error": 0.019814254496554082,
+          "requested_budget": 7932,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "9065": {
+          "budget_value": 0.4,
+          "max_iters": 20,
+          "mean_raw_roots": 8843.083333333334,
+          "q": 1.1718750098828126,
+          "relative_error": 0.024480603052031556,
+          "requested_budget": 9065,
+          "tolerance": 0.03,
+          "trials": 12
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 20,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 12,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc/roman_empire_budget_sweep_static_normalised_weights_mc.yaml",
+  "version": 1
+}

@@ -1,0 +1,77 @@
+study_name: local_validation_scheme_macro_f1_smoke
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  torch_num_threads: 1
+  deterministic: true
+output:
+  root: outputs
+  experiment_name: validation_schemes
+  save_checkpoints: false
+  overwrite: true
+logging:
+  level: INFO
+  log_to_stdout: true
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  datasets:
+  - cora
+  feature_modes:
+  - enabled
+  synthetic:
+    num_features: 32
+    feature_noise: 0.4
+    train_ratio: 0.6
+    val_ratio: 0.2
+model:
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.5
+  aggr: mean
+  use_batch_norm: true
+  residual: true
+  jk_mode: cat
+  head_hidden_dim: 128
+optimization:
+  epochs: 5
+  lr: 0.003
+  weight_decay: 0.0001
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: true
+  class_weight_mode: effective_num
+  class_weight_beta: 0.999
+  label_smoothing: 0.05
+  early_stopping_patience: 3
+  min_epochs: 1
+  scheduler_factor: 0.5
+  scheduler_patience: 2
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: macro_f1
+sampling:
+  samplers:
+  - uniform
+  - degree
+  - wilson
+  batch_sizes:
+  - 64
+  num_hops:
+  - 2
+  steps_per_epoch: 2
+  eval_batch_size: 128
+  sample_inference: false
+  inference_max_batches: 16
+  wilson:
+    backend: auto
+    q: 4.0
+    max_sampling_attempts: 8
+    allow_uniform_fill: true
+    make_undirected: false
+    remove_self_loops: false
+benchmark:
+  runs: 1
+  base_seed: 0
+  parallel_workers: 1

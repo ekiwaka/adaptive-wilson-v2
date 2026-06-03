@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "sampler_name": "wilson",
+  "budget_unit": "ratio",
+  "make_undirected": true,
+  "remove_self_loops": true,
+  "datasets": {
+    "citeseer": {
+      "dataset_name": "citeseer",
+      "num_nodes": 3327,
+      "num_candidate_nodes": 3327,
+      "split_mode": "sampler",
+      "q_by_budget_count": {
+        "333": {
+          "q": 0.0001,
+          "budget_value": 0.1,
+          "requested_budget": 333,
+          "mean_raw_roots": 334.0,
+          "std_raw_roots": 9.5,
+          "relative_error": 0.003,
+          "trials": 8,
+          "max_iters": 16,
+          "tolerance": 0.03,
+          "status_converged": 1.0
+        }
+      }
+    }
+  }
+}

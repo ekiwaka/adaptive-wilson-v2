@@ -1,0 +1,100 @@
+study_name: grid_actor_features_off_search
+runtime:
+  device: cuda
+  device_policy: warn_and_fallback
+  torch_num_threads: 1
+  deterministic: true
+output:
+  root: outputs
+  experiment_name: search
+  save_checkpoints: true
+  overwrite: true
+logging:
+  level: INFO
+  log_to_stdout: true
+data:
+  root: data
+  split_idx: 0
+  standardize_features: false
+  datasets:
+  - actor
+  feature_modes:
+  - disabled
+  synthetic:
+    num_features: 32
+    feature_noise: 0.4
+    train_ratio: 0.6
+    val_ratio: 0.2
+model_search:
+  hidden_dims:
+  - 128
+  - 256
+  num_layers:
+  - 3
+  - 4
+  dropouts:
+  - 0.3
+  - 0.5
+  aggrs:
+  - mean
+  jk_modes:
+  - cat
+  head_hidden_dims:
+  - 128
+  - 256
+  use_batch_norm: true
+  residual: true
+optimization:
+  epochs: 30
+  lr: 0.003
+  weight_decay: 0.0001
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: true
+  class_weight_mode: effective_num
+  class_weight_beta: 0.999
+  label_smoothing: 0.05
+  early_stopping_patience: 10
+  min_epochs: 10
+  scheduler_factor: 0.5
+  scheduler_patience: 3
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: macro_f1
+evaluation:
+  mode: exact_batched
+  device: cuda
+  batch_size: 512
+  non_blocking: true
+  compute_train_metrics: true
+sampling:
+  samplers:
+  - uniform
+  - degree
+  - wilson
+  batch_sizes:
+  - 64
+  - 128
+  num_hops:
+  - 3
+  - 4
+  steps_per_epoch: 12
+  eval_batch_size: 256
+  sample_inference: false
+  inference_max_batches: 64
+  wilson_q_values:
+  - 0.1
+  - 1.0
+  - 4.0
+  wilson:
+    backend: auto
+    q: 4.0
+    max_sampling_attempts: 8
+    allow_uniform_fill: true
+    make_undirected: false
+    remove_self_loops: false
+search:
+  runs: 1
+  base_seed: 0
+  parallel_workers: 1
+  selection_metric: mean_val_macro_f1

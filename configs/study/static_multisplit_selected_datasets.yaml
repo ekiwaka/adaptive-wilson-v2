@@ -1,0 +1,15 @@
+study_name: static_multisplit_selected_datasets
+auto_use_best_q: false
+output_root: outputs
+manifest_name: static_multisplit_selected_datasets
+run_order:
+- benchmark
+diagnostics_configs: []
+search_configs: []
+q_sweep_configs: []
+train_configs: []
+benchmark_configs:
+- configs/benchmark/static_multisplit/cora_static_multisplit_budget_sweep.yaml
+- configs/benchmark/static_multisplit/citeseer_static_multisplit_budget_sweep.yaml
+- configs/benchmark/static_multisplit/wikipedia_chameleon_static_multisplit_budget_sweep.yaml
+- configs/benchmark/static_multisplit/wikipedia_squirrel_static_multisplit_budget_sweep.yaml

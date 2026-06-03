@@ -1,0 +1,118 @@
+study_name: static_citeseer_wilson_unweighted_budget_target
+experiment:
+  sampling_regime: static
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 2
+  deterministic: true
+output:
+  root: outputs/active/local/static/unweighted
+  experiment_name: static_citeseer_wilson_unweighted_budget_target
+  save_checkpoints: false
+  overwrite: true
+  append_timestamp: false
+logging:
+  level: INFO
+  log_to_stdout: true
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  datasets:
+  - citeseer
+  feature_modes:
+  - enabled
+  split:
+    mode: sampler
+    val_ratio_of_remaining: 0.25
+model:
+  family: gcn
+  hidden_dim: 32
+  num_layers: 2
+  dropout: 0.5
+  input_dropout: 0.0
+  aggr: mean
+  use_batch_norm: false
+  norm_type: none
+  residual: false
+  jk_mode: last
+  head_type: linear
+  head_hidden_dim: 32
+optimization:
+  epochs: 1
+  lr: 0.005
+  weight_decay: 0.0005
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: false
+  label_smoothing: 0.0
+  early_stopping_patience: 5
+  min_epochs: 1
+  scheduler_factor: 0.5
+  scheduler_patience: 3
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: accuracy
+  use_static_weight_normalization: false
+  use_normalized_weights: false
+  normalize_weights: true
+  weight_normalization: mean_one
+  static_weight_normalization_eps: 1.0e-12
+  strict_one_pass_wilson_weights: true
+sampling:
+  samplers:
+  - wilson
+  modes:
+  - static
+  online_schedules:
+  - per_batch
+  budget_unit: ratio
+  budget_values:
+  - 0.1
+  batch_sizes:
+  - 64
+  num_hops:
+  - 2
+  steps_per_epoch: 2
+  eval_batch_size: 128
+  sample_inference: false
+  inference_max_batches: 16
+  cache_preprocessed_graph: true
+  reuse_cached_preprocessed_graph: true
+  cache_dirname: preprocessed_graphs
+  wilson:
+    backend: python
+    q: 1.0
+    redraw_on_shortfall: true
+    allow_uniform_fill: false
+    auto_q_method: mean_degree
+    q_estimation: mean_degree
+    weight_estimation: exact
+    num_weight_forests: 64
+    budget_targeting_enabled: true
+    target_budget_tolerance: 0.03
+    max_budget_search_steps: 8
+    avoid_padding: true
+    avoid_capping: true
+    budget_target_failure_policy: warn_and_continue
+  adaptive_wilson:
+    q_i_mode: alpha
+    alpha: 1.0
+    alpha_grid:
+    - 0.25
+    - 0.5
+    - 1.0
+    - 2.0
+benchmark:
+  runs: 1
+  base_seed: 0
+  parallel_workers: 1
+evaluation:
+  mode: exact_batched
+  device: cpu
+  batch_size: 128
+  non_blocking: false
+  compute_train_metrics: true
+  track_test_metrics_during_training: false

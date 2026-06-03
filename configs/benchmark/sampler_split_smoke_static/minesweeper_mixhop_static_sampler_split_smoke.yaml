@@ -1,0 +1,123 @@
+# Static sampler-split smoke test for minesweeper using mixhop.
+# Fast end-to-end check of dataset loading, sampler-defined split creation,
+# static sampling config expansion, model construction, training, evaluation, and output writing.
+# This smoke config intentionally uses mean_degree q and disables normalized static loss
+# to avoid a q-table/calibration prerequisite.
+study_name: minesweeper_mixhop_static_sampler_split_smoke
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 1
+  deterministic: true
+
+output:
+  root: outputs
+  experiment_name: smoke/static_sampler_split/minesweeper_mixhop
+  save_checkpoints: false
+  overwrite: false
+  append_timestamp: true
+  timestamp_format: "%Y_%m_%d_%H_%M_%S"
+
+logging:
+  level: INFO
+  log_to_stdout: true
+
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  split:
+    mode: sampler
+    val_ratio_of_remaining: 0.10
+  datasets: [minesweeper]
+  feature_modes: [enabled]
+  synthetic:
+    sizes: [120, 120, 120]
+    p_in: 0.08
+    p_out: 0.02
+    num_features: 32
+    feature_noise: 0.4
+    train_ratio: 0.6
+    val_ratio: 0.2
+
+model:
+  family: mixhop
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.35
+  input_dropout: 0.05
+  aggr: mean
+  use_batch_norm: false
+  norm_type: none
+  residual: false
+  jk_mode: last
+  head_type: linear
+  head_hidden_dim: 64
+
+optimization:
+  epochs: 3
+  lr: 0.003
+  weight_decay: 0.0005
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: true
+  class_weight_mode: effective_num
+  class_weight_beta: 0.999
+  label_smoothing: 0.02
+  use_static_weight_normalization: false
+  static_weight_normalization_eps: 1.0e-12
+  strict_one_pass_wilson_weights: false
+  early_stopping_patience: 3
+  min_epochs: 1
+  scheduler_factor: 0.5
+  scheduler_patience: 2
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: macro_f1
+
+sampling:
+  samplers: [uniform, degree, wilson]
+  modes: [static]
+  online_schedules: [per_batch]
+  budget_unit: ratio
+  budget_values: [0.10]
+  batch_sizes: [64]
+  num_hops: [2]
+  steps_per_epoch: 1
+  eval_batch_size: 512
+  sample_inference: false
+  inference_max_batches: 8
+  cache_preprocessed_graph: false
+  reuse_cached_preprocessed_graph: false
+  cache_dirname: smoke_static_sampler_split
+  wilson:
+    backend: auto
+    q: null
+    auto_q_method: mean_degree
+    q_table_path: null
+    q_table_missing_policy: mean_degree
+    q_calibration_trials: 2
+    q_calibration_max_iters: 6
+    q_calibration_tolerance: 0.03
+    q_min: 1.0e-8
+    q_max: 100.0
+    q_calibration_seed: 1729
+    redraw_on_shortfall: true
+    max_sampling_attempts: 3
+    allow_uniform_fill: true
+    make_undirected: true
+    remove_self_loops: true
+
+benchmark:
+  runs: 1
+  base_seed: 0
+  parallel_workers: 1
+
+evaluation:
+  mode: full_graph
+  device: auto
+  batch_size: 2048
+  non_blocking: true
+  compute_train_metrics: true
+  track_test_metrics_during_training: false

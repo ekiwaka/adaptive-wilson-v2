@@ -1,0 +1,84 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "questions": {
+      "dataset_name": "questions",
+      "num_candidate_nodes": 48921,
+      "num_nodes": 48921,
+      "q_by_budget_count": {
+        "12230": {
+          "budget_value": 0.25,
+          "max_iters": 20,
+          "mean_raw_roots": 11914.666666666666,
+          "q": 0.4882812599511719,
+          "relative_error": 0.025783592259471296,
+          "requested_budget": 12230,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "14676": {
+          "budget_value": 0.3,
+          "max_iters": 20,
+          "mean_raw_roots": 14796.833333333334,
+          "q": 0.6835937599316406,
+          "relative_error": 0.008233396929226897,
+          "requested_budget": 14676,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "2446": {
+          "budget_value": 0.05,
+          "max_iters": 20,
+          "mean_raw_roots": 2518.75,
+          "q": 0.07324219749267578,
+          "relative_error": 0.02974243663123467,
+          "requested_budget": 2446,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "4892": {
+          "budget_value": 0.1,
+          "max_iters": 20,
+          "mean_raw_roots": 4962.5,
+          "q": 0.15869141623413086,
+          "relative_error": 0.014411283728536386,
+          "requested_budget": 4892,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "7338": {
+          "budget_value": 0.15,
+          "max_iters": 20,
+          "mean_raw_roots": 7419.25,
+          "q": 0.2563476662243652,
+          "relative_error": 0.011072499318615427,
+          "requested_budget": 7338,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "9784": {
+          "budget_value": 0.2,
+          "max_iters": 20,
+          "mean_raw_roots": 9736.25,
+          "q": 0.3662109474633789,
+          "relative_error": 0.0048804170073589535,
+          "requested_budget": 9784,
+          "tolerance": 0.03,
+          "trials": 12
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 20,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 12,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc/questions_budget_sweep_static_normalised_weights_mc.yaml",
+  "version": 1
+}

@@ -1,0 +1,95 @@
+study_name: local_cpu_sbm_imbalanced_wilson_q_sweep_gcn
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 1
+  deterministic: true
+output:
+  root: outputs
+  experiment_name: q_sweep
+  save_checkpoints: false
+  overwrite: true
+logging:
+  level: INFO
+  log_to_stdout: true
+dataset:
+  name: sbm_imbalanced
+  root: data
+  split_idx: 0
+  feature_mode: enabled
+  standardize_features: true
+  synthetic:
+    sizes:
+    - 700
+    - 250
+    - 100
+    p_in: 0.05
+    p_out: 0.04
+    num_features: 12
+    feature_noise: 1.4
+    train_ratio: 0.2
+    val_ratio: 0.2
+model:
+  hidden_dim: 64
+  num_layers: 3
+  dropout: 0.25
+  input_dropout: 0.0
+  aggr: mean
+  use_batch_norm: true
+  norm_type: batch
+  residual: true
+  jk_mode: cat
+  head_type: mlp
+  head_hidden_dim: 64
+  family: gcn
+optimization:
+  epochs: 90
+  lr: 0.003
+  weight_decay: 0.0001
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: true
+  class_weight_mode: effective_num
+  class_weight_beta: 0.999
+  label_smoothing: 0.02
+  early_stopping_patience: 14
+  min_epochs: 24
+  scheduler_factor: 0.5
+  scheduler_patience: 6
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: balanced_accuracy
+sampling:
+  name: wilson
+  batch_size: 96
+  steps_per_epoch: 8
+  eval_batch_size: 1024
+  num_hops: 3
+  sample_inference: false
+  inference_max_batches: 32
+  wilson:
+    backend: auto
+    q: 2.0
+    max_sampling_attempts: 8
+    allow_uniform_fill: true
+    make_undirected: false
+    remove_self_loops: false
+q_sweep:
+  q_values:
+  - 0.25
+  - 0.5
+  - 1.0
+  - 2.0
+  - 4.0
+  runs: 2
+  base_seed: 0
+  parallel_workers: 1
+  selection_metric: mean_val_balanced_accuracy
+evaluation:
+  mode: full_graph
+  device: auto
+  batch_size: 4096
+  non_blocking: true
+  compute_train_metrics: true
+  track_test_metrics_during_training: false

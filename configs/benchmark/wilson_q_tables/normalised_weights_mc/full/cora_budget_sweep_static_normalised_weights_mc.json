@@ -1,0 +1,134 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "cora": {
+      "dataset_name": "cora",
+      "num_candidate_nodes": 2708,
+      "num_nodes": 2708,
+      "q_by_budget_count": {
+        "1083": {
+          "budget_value": 0.4,
+          "max_iters": 20,
+          "mean_raw_roots": 1095.3333333333333,
+          "q": 1.4648437598535158,
+          "relative_error": 0.011388119421360348,
+          "requested_budget": 1083,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1219": {
+          "budget_value": 0.45,
+          "max_iters": 20,
+          "mean_raw_roots": 1230.0,
+          "q": 1.9531250098046877,
+          "relative_error": 0.009023789991796555,
+          "requested_budget": 1219,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1354": {
+          "budget_value": 0.5,
+          "max_iters": 20,
+          "mean_raw_roots": 1337.1666666666667,
+          "q": 2.343750009765625,
+          "relative_error": 0.012432299359921165,
+          "requested_budget": 1354,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1489": {
+          "budget_value": 0.55,
+          "max_iters": 20,
+          "mean_raw_roots": 1485.4166666666667,
+          "q": 3.1250000096875,
+          "relative_error": 0.0024065368256099783,
+          "requested_budget": 1489,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1625": {
+          "budget_value": 0.6,
+          "max_iters": 20,
+          "mean_raw_roots": 1615.25,
+          "q": 3.9062500096093755,
+          "relative_error": 0.006,
+          "requested_budget": 1625,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "271": {
+          "budget_value": 0.1,
+          "max_iters": 20,
+          "mean_raw_roots": 276.3333333333333,
+          "q": 0.12817383811218264,
+          "relative_error": 0.01968019680196795,
+          "requested_budget": 271,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "406": {
+          "budget_value": 0.15,
+          "max_iters": 20,
+          "mean_raw_roots": 400.25,
+          "q": 0.24414063497558597,
+          "relative_error": 0.01416256157635468,
+          "requested_budget": 406,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "542": {
+          "budget_value": 0.2,
+          "max_iters": 20,
+          "mean_raw_roots": 534.75,
+          "q": 0.3906250099609375,
+          "relative_error": 0.013376383763837638,
+          "requested_budget": 542,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "677": {
+          "budget_value": 0.25,
+          "max_iters": 20,
+          "mean_raw_roots": 689.3333333333334,
+          "q": 0.5859375099414063,
+          "relative_error": 0.018217626784835114,
+          "requested_budget": 677,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "812": {
+          "budget_value": 0.3,
+          "max_iters": 20,
+          "mean_raw_roots": 795.5833333333334,
+          "q": 0.781250009921875,
+          "relative_error": 0.02021756978653526,
+          "requested_budget": 812,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "948": {
+          "budget_value": 0.35,
+          "max_iters": 20,
+          "mean_raw_roots": 971.9166666666666,
+          "q": 1.1718750098828126,
+          "relative_error": 0.025228551336146234,
+          "requested_budget": 948,
+          "tolerance": 0.03,
+          "trials": 12
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 20,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 12,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc/cora_budget_sweep_static_normalised_weights_mc.yaml",
+  "version": 1
+}
