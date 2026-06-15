@@ -450,7 +450,9 @@ class WilsonCenterSampler(CenterSampler):
                 'wilson_online_probability_selected_mean': float(selected_probabilities.mean().item()),
             }
         )
-        if self.redraw_on_shortfall or self.allow_uniform_fill or self.budget_targeting != 'legacy':
+        if self.budget_targeting == 'expected_budget':
+            metadata['wilson_online_probability_matches_final_centers_exactly'] = 1.0
+        elif self.redraw_on_shortfall or self.allow_uniform_fill or self.budget_targeting != 'legacy':
             metadata['wilson_online_probability_matches_final_centers_exactly'] = 0.0
         else:
             metadata['wilson_online_probability_matches_final_centers_exactly'] = 1.0
@@ -558,6 +560,50 @@ class WilsonCenterSampler(CenterSampler):
             },
         )
 
+
+    def _sample_expected_budget(self, candidate_nodes: torch.Tensor, budget: int, *, generator: torch.Generator) -> SamplerOutput:
+        """Draw one q-Wilson forest using q calibrated for the target budget.
+
+        This mode preserves the Wilson root distribution: it does not cap,
+        truncate, redraw to hit the target, or fill with uniform nodes. The
+        requested budget is interpreted as an expected mini-batch size used to
+        resolve q, not as an exact final batch-size constraint.
+        """
+        q_initial = float(self._resolve_initial_q(int(budget)))
+        roots = self._draw_eligible_roots(candidate_nodes, q_initial, generator=generator)
+        realized = int(roots.numel())
+        if realized <= 0:
+            raise RuntimeError(
+                'Wilson expected_budget sampling produced zero eligible roots. '
+                'Increase the target budget or recalibrate the q table.'
+            )
+        rel_err = abs(float(realized) - float(budget)) / max(float(budget), 1.0)
+        metadata = {
+            'requested_budget': float(budget),
+            'target_expected_budget': float(budget),
+            'realized_budget': float(realized),
+            'q_initial': float(q_initial),
+            'q_resolved_initial': float(q_initial),
+            'q_used_for_sample': float(q_initial),
+            'q_final': float(q_initial),
+            'attempts_used': 1.0,
+            'q_redraws_used': 0.0,
+            'redraw_on_shortfall': 0.0,
+            'fallback_uniform': 0.0,
+            'allow_uniform_fill': 0.0,
+            'one_pass_wilson': 1.0,
+            'budget_targeting': 1.0,
+            'expected_budget_targeting': 1.0,
+            'postprocessed_fixed_budget': 0.0,
+            'cap_or_truncate_used': 0.0,
+            'uniform_fill_used': 0.0,
+            'budget_relative_error': float(rel_err),
+            'raw_roots_before_postprocessing': float(realized),
+            'raw_mean_roots_before_cap': float(realized),
+            'raw_std_roots_before_cap': 0.0,
+        }
+        return SamplerOutput(center_nodes=roots, metadata=metadata)
+
     def _sample_legacy(self, candidate_nodes: torch.Tensor, budget: int, *, generator: torch.Generator) -> SamplerOutput:
         q_initial = self._resolve_initial_q(budget)
         current_q = q_initial
@@ -638,6 +684,8 @@ class WilsonCenterSampler(CenterSampler):
         if budget <= 0:
             raise ValueError('budget must be positive.')
         candidate_nodes = candidate_nodes.to(device=self.device, dtype=torch.long)
+        if self.budget_targeting == 'expected_budget':
+            return self._sample_expected_budget(candidate_nodes, budget, generator=generator)
         if self.budget_targeting == 'q_target_search':
             return self._sample_with_q_target_search(candidate_nodes, budget, generator=generator)
         return self._sample_legacy(candidate_nodes, budget, generator=generator)
@@ -653,15 +701,30 @@ class AdaptiveWilsonCenterSampler(WilsonCenterSampler):
 
     name = 'adaptive_wilson'
 
-    def __init__(self, *args, alpha: float = 1.0, q_i_mode: str = 'alpha', **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        alpha: float = 1.0,
+        q_i_mode: str = 'alpha',
+        q_mode: str = 'manual_alpha',
+        **kwargs,
+    ) -> None:
         if q_i_mode != 'alpha':
             raise ValueError('AdaptiveWilsonCenterSampler currently supports only q_i_mode=alpha.')
         if alpha <= 0.0:
             raise ValueError('AdaptiveWilsonCenterSampler alpha must be positive.')
-        kwargs['q'] = float(alpha)
+        if q_mode not in {'manual_alpha', 'precomputed_budget_q'}:
+            raise ValueError('AdaptiveWilsonCenterSampler q_mode must be manual_alpha or precomputed_budget_q.')
+        # In manual_alpha mode, Adaptive Wilson is the scalar-q baseline q_i=alpha.
+        # In precomputed_budget_q mode, q is resolved by WilsonCenterSampler from
+        # sampling.wilson.auto_q_method/q_table_path for each target budget. This
+        # preserves the Wilson draw and avoids cap/truncate/fill post-processing.
+        if q_mode == 'manual_alpha':
+            kwargs['q'] = float(alpha)
         super().__init__(*args, **kwargs)
         self.alpha = float(alpha)
         self.q_i_mode = str(q_i_mode)
+        self.q_mode = str(q_mode)
 
     def sample(self, candidate_nodes: torch.Tensor, budget: int, *, generator: torch.Generator) -> SamplerOutput:
         out = super().sample(candidate_nodes, budget, generator=generator)
@@ -671,6 +734,8 @@ class AdaptiveWilsonCenterSampler(WilsonCenterSampler):
                 'adaptive_wilson': 1.0,
                 'adaptive_q_i_mode_alpha': 1.0,
                 'adaptive_alpha': float(self.alpha),
+                'adaptive_q_mode_precomputed_budget_q': float(self.q_mode == 'precomputed_budget_q'),
+                'adaptive_q_mode_manual_alpha': float(self.q_mode == 'manual_alpha'),
             }
         )
         return SamplerOutput(center_nodes=out.center_nodes, metadata=metadata)

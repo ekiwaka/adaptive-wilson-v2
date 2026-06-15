@@ -1,7 +1,14 @@
 from __future__ import annotations
+import sys
 import time
 from dataclasses import asdict, dataclass
 from typing import Any, Optional
+
+try:
+    import resource
+except ImportError:  # pragma: no cover - non-Unix fallback
+    resource = None
+
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -16,6 +23,27 @@ from ..models.mixhop import MixHopClassifier
 from ..sampling.base import CenterSampler
 from ..sampling.online_weights import compute_online_sample_weights
 from .preprocessing import resolve_budget_count
+
+
+def memory_snapshot_mb(device: torch.device) -> float:
+    """Return a lightweight memory snapshot in MB.
+
+    CUDA runs use torch's allocated-memory counter. CPU runs use the process
+    resident-set high-water mark when the platform exposes resource.getrusage.
+    The value is diagnostic only; it is intended for sampler cost comparisons,
+    not exact allocator accounting.
+    """
+
+    if device.type == 'cuda' and torch.cuda.is_available():
+        return float(torch.cuda.max_memory_allocated(device) / (1024.0 ** 2))
+
+    if resource is None:
+        return 0.0
+
+    usage = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    if sys.platform == 'darwin':
+        return usage / (1024.0 ** 2)
+    return usage / 1024.0
 
 
 @dataclass(slots=True)
@@ -472,6 +500,7 @@ def train_one_epoch(
     amp_enabled: bool = False,
     use_normalized_weights: bool = False,
     weight_eps: float = 1e-12,
+    reweighting_target: str = 'loss',
 ) -> tuple[float, list[BatchStats], dict[str, Any], list[dict[str, Any]]]:
     """Train the model for one epoch using sampled k-hop batches (online per-batch)."""
 
@@ -488,12 +517,24 @@ def train_one_epoch(
     budget = resolve_budget_count(sampling, int(dataset.train_nodes.numel()))
 
     for step_idx in range(int(sampling.steps_per_epoch)):
+        batch_start = time.perf_counter()
+        memory_before_mb = memory_snapshot_mb(device)
+
+        sample_start = time.perf_counter()
         sample_out = sampler.sample(dataset.train_nodes, budget, generator=generator)
+        sampling_time = time.perf_counter() - sample_start
+
         center_nodes_cpu_for_stats = sample_out.center_nodes.detach().cpu().to(torch.long)
         unique_center_nodes.update(int(value) for value in center_nodes_cpu_for_stats.tolist())
+
+        subgraph_start = time.perf_counter()
         subgraph = build_batch_subgraph(dataset.data, sample_out.center_nodes, num_hops, sample_out.metadata)
+        subgraph_construction_time = time.perf_counter() - subgraph_start
+
         online_sample_weight = None
+        online_weight_time = 0.0
         if use_normalized_weights:
+            weight_start = time.perf_counter()
             online_weights = compute_online_sample_weights(
                 sampler_name=sampling.name,
                 edge_index=dataset.data.edge_index,
@@ -505,6 +546,7 @@ def train_one_epoch(
                 budget=budget,
                 sampler=sampler,
             )
+            online_weight_time = time.perf_counter() - weight_start
             online_sample_weight = online_weights.weights
             subgraph.stats.sampler_metadata.update(
                 {
@@ -519,12 +561,21 @@ def train_one_epoch(
             )
         else:
             subgraph.stats.sampler_metadata['online_normalized_weighting_enabled'] = 0.0
+
         batch_stats.append(subgraph.stats)
+
+        transfer_start = time.perf_counter()
         subgraph = move_batch_subgraph_to_device(subgraph, device, non_blocking=True)
         if online_sample_weight is not None:
             online_sample_weight = online_sample_weight.to(device=device, dtype=torch.float32)
+        device_transfer_time = time.perf_counter() - transfer_start
+
+        forward_loss_time = 0.0
+        backward_time = 0.0
+        optimizer_step_time = 0.0
 
         if scaler is not None and amp_enabled:
+            forward_start = time.perf_counter()
             with torch.amp.autocast('cuda', enabled=True):
                 logits = model(subgraph.x, subgraph.edge_index)
                 center_logits = logits[subgraph.center_local_idx]
@@ -535,17 +586,26 @@ def train_one_epoch(
                     loss_fn,
                     online_sample_weight,
                     eps=weight_eps,
+                    reweighting_target=reweighting_target,
                 )
+            forward_loss_time = time.perf_counter() - forward_start
+
+            backward_start = time.perf_counter()
             scaler.scale(loss / accumulation_steps).backward()
+            backward_time = time.perf_counter() - backward_start
+
             should_step = ((step_idx + 1) % accumulation_steps == 0) or (step_idx + 1 == int(sampling.steps_per_epoch))
             if should_step:
+                optimizer_start = time.perf_counter()
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip_norm)
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad(set_to_none=True)
                 optimizer_updates += 1
+                optimizer_step_time = time.perf_counter() - optimizer_start
         else:
+            forward_start = time.perf_counter()
             logits = model(subgraph.x, subgraph.edge_index)
             center_logits = logits[subgraph.center_local_idx]
             center_target = subgraph.y[subgraph.center_local_idx]
@@ -555,18 +615,49 @@ def train_one_epoch(
                 loss_fn,
                 online_sample_weight,
                 eps=weight_eps,
+                reweighting_target=reweighting_target,
             )
+            forward_loss_time = time.perf_counter() - forward_start
+
+            backward_start = time.perf_counter()
             (loss / accumulation_steps).backward()
+            backward_time = time.perf_counter() - backward_start
+
             should_step = ((step_idx + 1) % accumulation_steps == 0) or (step_idx + 1 == int(sampling.steps_per_epoch))
             if should_step:
+                optimizer_start = time.perf_counter()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip_norm)
                 optimizer.step()
                 optimizer.zero_grad(set_to_none=True)
                 optimizer_updates += 1
+                optimizer_step_time = time.perf_counter() - optimizer_start
+
+        memory_after_mb = memory_snapshot_mb(device)
+        total_batch_time = time.perf_counter() - batch_start
+        model_compute_time = forward_loss_time + backward_time + optimizer_step_time
 
         current_loss = float(loss.item())
         losses.append(current_loss)
-        batch_stats[-1].sampler_metadata['batch_loss'] = current_loss
+        batch_stats[-1].sampler_metadata.update(
+            {
+                'batch_loss': current_loss,
+                'sampling_time': float(sampling_time),
+                'subgraph_construction_time': float(subgraph_construction_time),
+                'online_weight_time': float(online_weight_time),
+                'device_transfer_time': float(device_transfer_time),
+                'forward_loss_time': float(forward_loss_time),
+                'backward_time': float(backward_time),
+                'optimizer_step_time': float(optimizer_step_time),
+                'model_compute_time': float(model_compute_time),
+                'total_batch_time': float(total_batch_time),
+                'memory_before_mb': float(memory_before_mb),
+                'memory_after_mb': float(memory_after_mb),
+                'memory_delta_mb': float(memory_after_mb - memory_before_mb),
+                'peak_memory_mb': float(memory_after_mb),
+                'reweighting_target_loss': float(reweighting_target == 'loss'),
+                'reweighting_target_gradient': float(reweighting_target == 'gradient'),
+            }
+        )
         batch_history.append(
             {
                 'step_in_epoch': int(step_idx + 1),
@@ -577,6 +668,30 @@ def train_one_epoch(
                 'sampled_edges': int(subgraph.stats.sampled_edges),
                 'requested_budget': float(sample_out.metadata.get('requested_budget', budget)),
                 'realized_budget': float(sample_out.metadata.get('realized_budget', subgraph.stats.center_nodes)),
+                'budget_relative_error': float(sample_out.metadata.get('budget_relative_error', 0.0)),
+                'target_expected_budget': sample_out.metadata.get('target_expected_budget'),
+                'q_initial': sample_out.metadata.get('q_initial'),
+                'q_resolved_initial': sample_out.metadata.get('q_resolved_initial'),
+                'q_used_for_sample': sample_out.metadata.get('q_used_for_sample'),
+                'q_final': sample_out.metadata.get('q_final'),
+                'expected_budget_targeting': sample_out.metadata.get('expected_budget_targeting'),
+                'postprocessed_fixed_budget': sample_out.metadata.get('postprocessed_fixed_budget'),
+                'cap_or_truncate_used': sample_out.metadata.get('cap_or_truncate_used'),
+                'uniform_fill_used': sample_out.metadata.get('uniform_fill_used'),
+                'sampling_time': float(sampling_time),
+                'subgraph_construction_time': float(subgraph_construction_time),
+                'online_weight_time': float(online_weight_time),
+                'device_transfer_time': float(device_transfer_time),
+                'forward_loss_time': float(forward_loss_time),
+                'backward_time': float(backward_time),
+                'optimizer_step_time': float(optimizer_step_time),
+                'model_compute_time': float(model_compute_time),
+                'total_batch_time': float(total_batch_time),
+                'memory_before_mb': float(memory_before_mb),
+                'memory_after_mb': float(memory_after_mb),
+                'memory_delta_mb': float(memory_after_mb - memory_before_mb),
+                'peak_memory_mb': float(memory_after_mb),
+                'reweighting_target': str(reweighting_target),
                 'online_normalized_weighting_enabled': float(
                     batch_stats[-1].sampler_metadata.get('online_normalized_weighting_enabled', 0.0)
                 ),
@@ -614,6 +729,10 @@ def train_one_epoch(
         batch_row['minibatch_loss_minus_expectation'] = residual
         batch_row['minibatch_loss_minus_expectation_squared'] = residual * residual
 
+    def _mean_stat(key: str) -> float:
+        values = [float(stat.sampler_metadata.get(key, 0.0) or 0.0) for stat in batch_stats]
+        return float(sum(values) / max(len(values), 1))
+
     train_count = max(int(dataset.train_nodes.numel()), 1)
     diagnostics = {
         'observed_minibatches': float(len(losses)),
@@ -627,11 +746,20 @@ def train_one_epoch(
         'unique_center_nodes_epoch': float(len(unique_center_nodes)),
         'unique_center_node_coverage_epoch': float(len(unique_center_nodes) / train_count),
         'total_center_draws_epoch': float(sum(stat.center_nodes for stat in batch_stats)),
+        'mean_sampling_time': _mean_stat('sampling_time'),
+        'mean_subgraph_construction_time': _mean_stat('subgraph_construction_time'),
+        'mean_online_weight_time': _mean_stat('online_weight_time'),
+        'mean_device_transfer_time': _mean_stat('device_transfer_time'),
+        'mean_forward_loss_time': _mean_stat('forward_loss_time'),
+        'mean_backward_time': _mean_stat('backward_time'),
+        'mean_optimizer_step_time': _mean_stat('optimizer_step_time'),
+        'mean_model_compute_time': _mean_stat('model_compute_time'),
+        'mean_total_batch_time': _mean_stat('total_batch_time'),
+        'max_peak_memory_mb': float(max((stat.sampler_metadata.get('peak_memory_mb', 0.0) or 0.0) for stat in batch_stats) if batch_stats else 0.0),
         'unique_center_node_ids': sorted(int(value) for value in unique_center_nodes),
     }
 
     return mean_loss, batch_stats, diagnostics, batch_history
-
 
 
 def train_one_epoch_full_graph_semisupervised(
@@ -795,6 +923,7 @@ def train_one_epoch_on_reduced_graph(
     amp_enabled: bool = False,
     use_normalized_weights: bool = False,
     weight_eps: float = 1e-12,
+    reweighting_target: str = 'loss',
 ) -> tuple[float, list[BatchStats], dict[str, Any], list[dict[str, Any]]]:
     """Train with one full-batch update on a preprocessed/reduced graph."""
 
@@ -918,11 +1047,15 @@ def compute_positional_weighted_cross_entropy(
     sample_weight: torch.Tensor | None,
     *,
     eps: float = 1e-12,
+    reweighting_target: str = 'loss',
 ) -> torch.Tensor:
+    if reweighting_target not in {'loss', 'gradient'}:
+        raise ValueError('reweighting_target must be loss or gradient.')
+
     if sample_weight is None:
         return loss_fn(logits, target)
 
-    sample_weight = sample_weight.to(
+    sample_weight = sample_weight.detach().to(
         device=logits.device,
         dtype=logits.dtype,
     )
@@ -956,4 +1089,12 @@ def compute_positional_weighted_cross_entropy(
     )
 
     denominator = sample_weight.sum().clamp_min(eps)
-    return (sample_weight * per_node_loss).sum() / denominator
+
+    # With detached sampling weights, weighted-loss backpropagation and
+    # weighting each per-example gradient by the same coefficients are
+    # mathematically equivalent because differentiation is linear:
+    #   ∇ sum_i a_i L_i = sum_i a_i ∇L_i .
+    # The explicit option is kept so experiments can record whether they are
+    # being interpreted as loss reweighting or gradient-estimator reweighting.
+    normalized_weight = sample_weight / denominator
+    return (normalized_weight * per_node_loss).sum()

@@ -329,6 +329,7 @@ def run_training_experiment(
                     amp_enabled=amp_enabled,
                     use_normalized_weights=_normalized_weighting_enabled(config),
                     weight_eps=config.optimization.static_weight_normalization_eps,
+                    reweighting_target=config.optimization.reweighting_target,
                 )
             else:
                 reduced_graph = static_reduced
@@ -467,10 +468,12 @@ def run_training_experiment(
                 'epoch_observed_minibatches': int(epoch_minibatch_updates),
                 'epoch_optimizer_updates': int(epoch_optimizer_updates),
                 'train_accuracy': float(train_metrics.accuracy) if train_metrics is not None else None,
+                'train_error': float(1.0 - train_metrics.accuracy) if train_metrics is not None else None,
                 'train_macro_f1': float(train_metrics.macro_f1) if train_metrics is not None else None,
                 'train_balanced_accuracy': float(train_metrics.balanced_accuracy) if train_metrics is not None else None,
                 'val_loss': float(val_metrics.loss),
                 'val_accuracy': float(val_metrics.accuracy),
+                'val_error': float(1.0 - val_metrics.accuracy),
                 'val_macro_f1': float(val_metrics.macro_f1),
                 'val_balanced_accuracy': float(val_metrics.balanced_accuracy),
                 'lr': float(optimizer.param_groups[0]['lr']),
@@ -481,6 +484,17 @@ def run_training_experiment(
                 'split_mode': config.dataset.split.mode,
                 'training_objective': training_objective,
                 'normalized_weighting_enabled': bool(_normalized_weighting_enabled(config)),
+                'reweighting_target': config.optimization.reweighting_target,
+                'mean_sampling_time': float(epoch_training_diagnostics.get('mean_sampling_time', 0.0)),
+                'mean_subgraph_construction_time': float(epoch_training_diagnostics.get('mean_subgraph_construction_time', 0.0)),
+                'mean_online_weight_time': float(epoch_training_diagnostics.get('mean_online_weight_time', 0.0)),
+                'mean_device_transfer_time': float(epoch_training_diagnostics.get('mean_device_transfer_time', 0.0)),
+                'mean_forward_loss_time': float(epoch_training_diagnostics.get('mean_forward_loss_time', 0.0)),
+                'mean_backward_time': float(epoch_training_diagnostics.get('mean_backward_time', 0.0)),
+                'mean_optimizer_step_time': float(epoch_training_diagnostics.get('mean_optimizer_step_time', 0.0)),
+                'mean_model_compute_time': float(epoch_training_diagnostics.get('mean_model_compute_time', 0.0)),
+                'mean_total_batch_time': float(epoch_training_diagnostics.get('mean_total_batch_time', 0.0)),
+                'max_peak_memory_mb': float(epoch_training_diagnostics.get('max_peak_memory_mb', 0.0)),
                 'resolved_budget': int(resolved_budget),
                 'total_nodes': int(dataset.data.num_nodes),
                 'train_node_count': int(dataset.train_nodes.numel()),
@@ -492,6 +506,7 @@ def run_training_experiment(
                 history_row.update(
                     {
                         'test_accuracy': float(test_metrics.accuracy),
+                        'test_error': float(1.0 - test_metrics.accuracy),
                         'test_macro_f1': float(test_metrics.macro_f1),
                         'test_balanced_accuracy': float(test_metrics.balanced_accuracy),
                     }

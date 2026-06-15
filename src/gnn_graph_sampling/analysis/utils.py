@@ -26,6 +26,7 @@ def build_center_sampler(sampling: SamplingConfig, dataset: DatasetBundle, devic
             adaptive_kwargs = {
                 'alpha': sampling.adaptive_wilson.alpha,
                 'q_i_mode': sampling.adaptive_wilson.q_i_mode,
+                'q_mode': sampling.adaptive_wilson.q_mode,
             }
         return sampler_cls(
             edge_index=dataset.data.edge_index,

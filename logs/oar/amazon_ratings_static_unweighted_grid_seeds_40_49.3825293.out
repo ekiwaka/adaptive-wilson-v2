@@ -1,0 +1,27 @@
+PROJECT_ROOT=/home/krawat/adaptive-wilson/adaptive-wilson
+LOG_ROOT=/home/krawat/adaptive-wilson/adaptive-wilson/logs
+OUTPUT_ROOT=/home/krawat/adaptive-wilson/adaptive-wilson/outputs
+CONDA_ENV_NAME=gnn-pub
+HOSTNAME=roazhon14-3.rennes.grid5000.fr
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Python 3.11.15
+/home/krawat/.conda/envs/gnn-pub/bin/python
+========================================
+Online chunk job
+Seeds: 40-49
+Host: roazhon14-3.rennes.grid5000.fr
+OAR_JOB_ID: 3825293
+Started at: Sun 14 Jun 2026 02:12:42 AM CEST
+CONFIG=configs/active/grid/static/unweighted/amazon_ratings__all_samplers_grid.yaml
+OUTROOT=outputs/active/grid/chunked/static/unweighted/amazon_ratings/seeds_40_49
+TOTAL_SEEDS=10
+CHUNK_SIZE=10
+PARALLEL_WORKERS=10
+PYTHONPATH=/home/krawat/adaptive-wilson/adaptive-wilson/src
+========================================
+[start] no tracker found; creating: /home/krawat/adaptive-wilson/adaptive-wilson/outputs/active/grid/chunked/static/unweighted/amazon_ratings/seeds_40_49/_chunk_status/amazon_ratings_unweighted_amazon_ratings_all_samplers_grid.json
+[run] chunk 0040_0049: seeds 40-49
+[done] chunk 0040_0049
+Status written to: /home/krawat/adaptive-wilson/adaptive-wilson/outputs/active/grid/chunked/static/unweighted/amazon_ratings/seeds_40_49/_chunk_status/amazon_ratings_unweighted_amazon_ratings_all_samplers_grid.json
+Finished seeds 40-49 at: Sun 14 Jun 2026 02:23:44 AM CEST

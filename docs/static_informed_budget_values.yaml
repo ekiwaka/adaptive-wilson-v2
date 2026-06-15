@@ -1,0 +1,50 @@
+normalized:
+  amazon_ratings:
+    dataset: amazon-ratings
+    train_ratio: 0.2
+    budgets:
+    - 64
+    - 128
+    - 256
+    - 512
+  pubmed:
+    dataset: pubmed
+    train_ratio: 0.3
+    budgets:
+    - 64
+    - 128
+    - 256
+    - 512
+  roman_empire:
+    dataset: roman-empire
+    train_ratio: 0.25
+    budgets:
+    - 64
+    - 128
+    - 256
+    - 512
+unweighted:
+  amazon_ratings:
+    dataset: amazon-ratings
+    train_ratio: 0.1
+    budgets:
+    - 32
+    - 64
+    - 128
+    - 256
+  pubmed:
+    dataset: pubmed
+    train_ratio: 0.1
+    budgets:
+    - 32
+    - 64
+    - 128
+    - 256
+  roman_empire:
+    dataset: roman-empire
+    train_ratio: 0.25
+    budgets:
+    - 64
+    - 128
+    - 256
+    - 512

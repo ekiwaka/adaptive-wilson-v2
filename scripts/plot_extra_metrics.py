@@ -148,6 +148,19 @@ def add_derived_columns(df: pd.DataFrame, *, steps_per_epoch: int) -> pd.DataFra
         denom = df["mean_train_node_count"].replace(0, pd.NA)
         df["mean_center_node_fraction"] = df["mean_average_center_nodes"] / denom
 
+    if "mean_val_error" not in df.columns and "mean_val_accuracy" in df.columns:
+        df["mean_val_error"] = 1.0 - df["mean_val_accuracy"]
+    if "mean_test_error" not in df.columns and "mean_test_accuracy" in df.columns:
+        df["mean_test_error"] = 1.0 - df["mean_test_accuracy"]
+    if "mean_train_error" not in df.columns and "mean_train_accuracy" in df.columns:
+        df["mean_train_error"] = 1.0 - df["mean_train_accuracy"]
+    if "std_val_error" not in df.columns and "std_val_accuracy" in df.columns:
+        df["std_val_error"] = df["std_val_accuracy"]
+    if "std_test_error" not in df.columns and "std_test_accuracy" in df.columns:
+        df["std_test_error"] = df["std_test_accuracy"]
+    if "std_train_error" not in df.columns and "std_train_accuracy" in df.columns:
+        df["std_train_error"] = df["std_train_accuracy"]
+
     return df
 
 
@@ -399,6 +412,20 @@ def plot_summary_metrics(summary: pd.DataFrame, out_root: Path, *, steps_per_epo
             "Validation macro-F1",
         ),
         (
+            "val_error_vs_actual_centers.png",
+            "mean_val_error",
+            "std_val_error",
+            "Validation error vs actual sampled center nodes",
+            "Validation error",
+        ),
+        (
+            "test_error_vs_actual_centers.png",
+            "mean_test_error",
+            "std_test_error",
+            "Test error vs actual sampled center nodes",
+            "Test error",
+        ),
+        (
             "best_epoch_vs_actual_centers.png",
             "mean_best_epoch",
             "std_best_epoch",
@@ -467,6 +494,41 @@ def plot_summary_metrics(summary: pd.DataFrame, out_root: Path, *, steps_per_epo
             "std_total_training_time",
             "Total training time vs actual sampled center nodes",
             "Total training time",
+        ),
+        (
+            "mean_total_batch_time_vs_actual_centers.png",
+            "mean_mean_total_batch_time",
+            "std_mean_total_batch_time",
+            "Mean sampled-batch time vs actual sampled center nodes",
+            "Mean batch time (s)",
+        ),
+        (
+            "mean_sampling_time_vs_actual_centers.png",
+            "mean_mean_sampling_time",
+            "std_mean_sampling_time",
+            "Mean sampler time vs actual sampled center nodes",
+            "Mean sampling time (s)",
+        ),
+        (
+            "mean_subgraph_time_vs_actual_centers.png",
+            "mean_mean_subgraph_construction_time",
+            "std_mean_subgraph_construction_time",
+            "Mean subgraph construction time vs actual sampled center nodes",
+            "Mean subgraph time (s)",
+        ),
+        (
+            "mean_model_compute_time_vs_actual_centers.png",
+            "mean_mean_model_compute_time",
+            "std_mean_model_compute_time",
+            "Mean model compute time vs actual sampled center nodes",
+            "Mean model compute time (s)",
+        ),
+        (
+            "peak_memory_mb_vs_actual_centers.png",
+            "mean_mean_peak_memory_mb",
+            "std_mean_peak_memory_mb",
+            "Peak memory snapshot vs actual sampled center nodes",
+            "Peak memory snapshot (MB)",
         ),
         (
             "sampled_edges_vs_actual_centers.png",
@@ -812,6 +874,13 @@ def load_selected_histories(
                     steps_per_epoch=steps_per_epoch,
                 )
 
+            if "val_error" not in hist.columns and "val_accuracy" in hist.columns:
+                hist["val_error"] = 1.0 - hist["val_accuracy"].astype(float)
+            if "test_error" not in hist.columns and "test_accuracy" in hist.columns:
+                hist["test_error"] = 1.0 - hist["test_accuracy"].astype(float)
+            if "train_error" not in hist.columns and "train_accuracy" in hist.columns:
+                hist["train_error"] = 1.0 - hist["train_accuracy"].astype(float)
+
             hist["plot_label"] = sampler_label(row, include_alpha=True)
 
             frames.append(hist)
@@ -838,8 +907,18 @@ def plot_history_curves(histories: pd.DataFrame, out_root: Path) -> None:
         ("test_macro_f1_convergence.png", "test_macro_f1", "Test macro-F1"),
         ("val_accuracy_convergence.png", "val_accuracy", "Validation accuracy"),
         ("test_accuracy_convergence.png", "test_accuracy", "Test accuracy"),
+        ("val_error_convergence.png", "val_error", "Validation error"),
+        ("test_error_convergence.png", "test_error", "Test error"),
         ("train_loss_convergence.png", "train_loss", "Train loss"),
         ("val_loss_convergence.png", "val_loss", "Validation loss"),
+        ("epoch_minibatch_loss_variance_convergence.png", "epoch_minibatch_loss_variance", "Mini-batch loss-estimator variance"),
+        ("epoch_minibatch_loss_std_convergence.png", "epoch_minibatch_loss_std", "Mini-batch loss std"),
+        ("loss_residual_squared_convergence.png", "minibatch_loss_minus_expectation_squared_mean", "Mean squared mini-batch loss residual"),
+        ("mean_total_batch_time_convergence.png", "mean_total_batch_time", "Mean time per sampled batch (s)"),
+        ("mean_sampling_time_convergence.png", "mean_sampling_time", "Mean sampling time per batch (s)"),
+        ("mean_subgraph_construction_time_convergence.png", "mean_subgraph_construction_time", "Mean subgraph construction time per batch (s)"),
+        ("mean_model_compute_time_convergence.png", "mean_model_compute_time", "Mean model compute time per batch (s)"),
+        ("peak_memory_mb_convergence.png", "max_peak_memory_mb", "Peak memory snapshot (MB)"),
     ]
 
     for (dataset, regime), group in histories.groupby(["dataset_name", "weighting_regime"], dropna=False):

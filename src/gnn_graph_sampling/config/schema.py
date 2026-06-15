@@ -10,13 +10,16 @@ WilsonBackend = Literal['auto', 'native', 'python']
 WilsonAutoQMethod = Literal['mean_degree', 'empirical_binary_search', 'precomputed_table']
 QTableMissingPolicy = Literal['error', 'empirical_binary_search', 'mean_degree']
 WilsonWeightEstimation = Literal['exact', 'monte_carlo_forests']
-WilsonBudgetTargetingMode = Literal['legacy', 'q_target_search']
+WilsonBudgetTargetingMode = Literal['legacy', 'q_target_search', 'expected_budget']
 BudgetTargetFailurePolicy = Literal['warn_and_continue', 'error']
 MonitorMetric = Literal['accuracy', 'macro_f1', 'balanced_accuracy', 'weighted_f1']
 ModelFamily = Literal['graphsage', 'gcn', 'mixhop']
 SamplingMode = Literal['online', 'static']
 OnlineSchedule = Literal['per_batch', 'per_epoch']
 BudgetUnit = Literal['count', 'ratio']
+ReweightingTarget = Literal['loss', 'gradient']
+AdaptiveWilsonBudgetGridMode = Literal['legacy_alpha_cap', 'fixed_budget']
+AdaptiveWilsonQMode = Literal['manual_alpha', 'precomputed_budget_q']
 SplitMode = Literal['predefined', 'public', 'custom', 'generated', 'sampler']
 
 
@@ -285,6 +288,9 @@ class OptimizationConfig:
     weight_normalization: Literal['mean_one'] = 'mean_one'
     static_weight_normalization_eps: float = 1e-12
     strict_one_pass_wilson_weights: bool = True
+    # loss: current weighted-loss objective. gradient: gradient-equivalent
+    # detached sample weighting, recorded separately for gradient-estimator studies.
+    reweighting_target: ReweightingTarget = 'loss'
 
     def validate(self) -> None:
         if self.epochs <= 0:
@@ -313,6 +319,8 @@ class OptimizationConfig:
             )
         if self.weight_normalization not in {'mean_one'}:
             raise ConfigurationError('optimization.weight_normalization must be mean_one.')
+        if self.reweighting_target not in {'loss', 'gradient'}:
+            raise ConfigurationError('optimization.reweighting_target must be loss or gradient.')
 
 
 @dataclass(slots=True)
@@ -401,8 +409,10 @@ class WilsonConfig:
             raise ConfigurationError('sampling.wilson.weight_estimation must be exact or monte_carlo_forests.')
         if self.num_weight_forests <= 0:
             raise ConfigurationError('sampling.wilson.num_weight_forests must be positive.')
-        if self.budget_targeting not in {'legacy', 'q_target_search'}:
-            raise ConfigurationError('sampling.wilson.budget_targeting must be legacy or q_target_search.')
+        if self.budget_targeting not in {'legacy', 'q_target_search', 'expected_budget'}:
+            raise ConfigurationError(
+                'sampling.wilson.budget_targeting must be legacy, q_target_search, or expected_budget.'
+            )
         if not (0.0 < self.target_budget_tolerance < 1.0):
             raise ConfigurationError('sampling.wilson.target_budget_tolerance must lie in (0, 1).')
         if self.max_budget_search_steps <= 0:
@@ -424,6 +434,15 @@ class AdaptiveWilsonConfig:
     q_i_mode: Literal['alpha'] = 'alpha'
     alpha: float = 1.0
     alpha_grid: list[float] = field(default_factory=list)
+    # manual_alpha preserves the old q_i=alpha behaviour. precomputed_budget_q
+    # makes Adaptive Wilson ignore alpha_grid/manual alpha and resolve q from
+    # sampling.wilson.q_table_path for each requested mini-batch budget.
+    q_mode: AdaptiveWilsonQMode = 'manual_alpha'
+    # legacy_alpha_cap preserves the old behaviour: alpha sweeps use one loose
+    # cap/budget and alpha determines the realised root count. fixed_budget runs
+    # every alpha at every requested budget, so adaptive_wilson is comparable
+    # with uniform/degree at matched center-node budgets.
+    budget_grid_mode: AdaptiveWilsonBudgetGridMode = 'legacy_alpha_cap'
 
     def validate(self) -> None:
         if self.q_i_mode not in {'alpha'}:
@@ -432,6 +451,14 @@ class AdaptiveWilsonConfig:
             raise ConfigurationError('sampling.adaptive_wilson.alpha must be positive.')
         if any(value <= 0.0 for value in self.alpha_grid):
             raise ConfigurationError('sampling.adaptive_wilson.alpha_grid must contain positive values.')
+        if self.q_mode not in {'manual_alpha', 'precomputed_budget_q'}:
+            raise ConfigurationError(
+                'sampling.adaptive_wilson.q_mode must be manual_alpha or precomputed_budget_q.'
+            )
+        if self.budget_grid_mode not in {'legacy_alpha_cap', 'fixed_budget'}:
+            raise ConfigurationError(
+                'sampling.adaptive_wilson.budget_grid_mode must be legacy_alpha_cap or fixed_budget.'
+            )
 
 
 

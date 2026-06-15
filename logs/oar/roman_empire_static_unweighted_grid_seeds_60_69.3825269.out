@@ -1,0 +1,27 @@
+PROJECT_ROOT=/home/krawat/adaptive-wilson/adaptive-wilson
+LOG_ROOT=/home/krawat/adaptive-wilson/adaptive-wilson/logs
+OUTPUT_ROOT=/home/krawat/adaptive-wilson/adaptive-wilson/outputs
+CONDA_ENV_NAME=gnn-pub
+HOSTNAME=roazhon13-5.rennes.grid5000.fr
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Python 3.11.15
+/home/krawat/.conda/envs/gnn-pub/bin/python
+========================================
+Online chunk job
+Seeds: 60-69
+Host: roazhon13-5.rennes.grid5000.fr
+OAR_JOB_ID: 3825269
+Started at: Sun 14 Jun 2026 02:12:01 AM CEST
+CONFIG=configs/active/grid/static/unweighted/roman_empire__all_samplers_grid.yaml
+OUTROOT=outputs/active/grid/chunked/static/unweighted/roman_empire/seeds_60_69
+TOTAL_SEEDS=10
+CHUNK_SIZE=10
+PARALLEL_WORKERS=10
+PYTHONPATH=/home/krawat/adaptive-wilson/adaptive-wilson/src
+========================================
+[start] no tracker found; creating: /home/krawat/adaptive-wilson/adaptive-wilson/outputs/active/grid/chunked/static/unweighted/roman_empire/seeds_60_69/_chunk_status/roman_empire_unweighted_roman_empire_all_samplers_grid.json
+[run] chunk 0060_0069: seeds 60-69
+[done] chunk 0060_0069
+Status written to: /home/krawat/adaptive-wilson/adaptive-wilson/outputs/active/grid/chunked/static/unweighted/roman_empire/seeds_60_69/_chunk_status/roman_empire_unweighted_roman_empire_all_samplers_grid.json
+Finished seeds 60-69 at: Sun 14 Jun 2026 02:36:11 AM CEST

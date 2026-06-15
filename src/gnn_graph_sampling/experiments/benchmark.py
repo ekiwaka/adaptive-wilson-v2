@@ -106,6 +106,8 @@ def _format_alpha_slug(value: float | None) -> str:
 def _adaptive_alpha_values(config: BenchmarkConfig, sampler_name: str) -> list[float | None]:
     if sampler_name != 'adaptive_wilson':
         return [None]
+    if config.sampling.adaptive_wilson.q_mode == 'precomputed_budget_q':
+        return [None]
 
     grid = list(config.sampling.adaptive_wilson.alpha_grid)
     if grid:
@@ -122,11 +124,18 @@ def _budget_values_for_sampler(
     if sampler_name == 'none':
         return [None]
 
-    # For Adaptive Wilson alpha sweeps, alpha is intended to control the
-    # realized number of Wilson roots. The sampler still needs a budget/cap,
-    # so for ratio budgets we use a loose cap of 1.0. The plot then uses the
-    # actual mean sampled center-node count as the x-axis.
-    if sampler_name == 'adaptive_wilson' and config.sampling.adaptive_wilson.alpha_grid:
+    # Adaptive Wilson alpha sweeps historically used one loose cap so alpha
+    # controlled the realised root count. That is still the default for
+    # backwards compatibility, and it avoids changing static/grid studies that
+    # relied on the old behaviour. New online fixed-mini-batch studies should
+    # set sampling.adaptive_wilson.budget_grid_mode=fixed_budget so every alpha
+    # is evaluated at every requested budget, making adaptive_wilson comparable
+    # with uniform and degree at matched center-node budgets.
+    if (
+        sampler_name == 'adaptive_wilson'
+        and config.sampling.adaptive_wilson.alpha_grid
+        and config.sampling.adaptive_wilson.budget_grid_mode == 'legacy_alpha_cap'
+    ):
         if config.sampling.budget_unit == 'ratio':
             return [1.0]
         if budget_values:
@@ -382,6 +391,11 @@ def run_benchmark_study(config: BenchmarkConfig) -> Path:
                                                 'q': config.sampling.wilson.q,
                                                 'adaptive_alpha': (
                                                     None if adaptive_alpha is None else float(adaptive_alpha)
+                                                ),
+                                                'adaptive_q_mode': (
+                                                    config.sampling.adaptive_wilson.q_mode
+                                                    if sampler_name == 'adaptive_wilson'
+                                                    else None
                                                 ),
                                                 'split_idx': int(split_idx),
                                                 'planetoid_split': config.data.planetoid_split,

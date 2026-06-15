@@ -10,9 +10,9 @@
         "10198": {
           "budget_value": 0.45,
           "max_iters": 20,
-          "mean_raw_roots": 10033.583333333334,
+          "mean_raw_roots": 10056.333333333334,
           "q": 1.56250000984375,
-          "relative_error": 0.01612244230894941,
+          "relative_error": 0.01389161273452305,
           "requested_budget": 10198,
           "tolerance": 0.03,
           "trials": 12
@@ -20,9 +20,9 @@
         "11331": {
           "budget_value": 0.5,
           "max_iters": 20,
-          "mean_raw_roots": 11016.5,
+          "mean_raw_roots": 11043.583333333334,
           "q": 1.9531250098046877,
-          "relative_error": 0.02775571441179066,
+          "relative_error": 0.02536551642985315,
           "requested_budget": 11331,
           "tolerance": 0.03,
           "trials": 12
@@ -30,9 +30,9 @@
         "12464": {
           "budget_value": 0.55,
           "max_iters": 20,
-          "mean_raw_roots": 12546.166666666666,
+          "mean_raw_roots": 12531.333333333334,
           "q": 2.7343750097265627,
-          "relative_error": 0.006592319212665762,
+          "relative_error": 0.005402225074882376,
           "requested_budget": 12464,
           "tolerance": 0.03,
           "trials": 12
@@ -40,9 +40,9 @@
         "13597": {
           "budget_value": 0.6,
           "max_iters": 20,
-          "mean_raw_roots": 13686.5,
+          "mean_raw_roots": 13686.583333333334,
           "q": 3.5156250096484376,
-          "relative_error": 0.006582334338457013,
+          "relative_error": 0.00658846314137927,
           "requested_budget": 13597,
           "tolerance": 0.03,
           "trials": 12
@@ -50,9 +50,9 @@
         "2266": {
           "budget_value": 0.1,
           "max_iters": 20,
-          "mean_raw_roots": 2300.0,
+          "mean_raw_roots": 2308.9166666666665,
           "q": 0.09765625999023438,
-          "relative_error": 0.01500441306266549,
+          "relative_error": 0.018939393939393874,
           "requested_budget": 2266,
           "tolerance": 0.03,
           "trials": 12
@@ -60,9 +60,9 @@
         "3399": {
           "budget_value": 0.15,
           "max_iters": 20,
-          "mean_raw_roots": 3429.5833333333335,
+          "mean_raw_roots": 3435.25,
           "q": 0.19531250998046876,
-          "relative_error": 0.008997744434637684,
+          "relative_error": 0.01066490144160047,
           "requested_budget": 3399,
           "tolerance": 0.03,
           "trials": 12
@@ -70,9 +70,9 @@
         "4532": {
           "budget_value": 0.2,
           "max_iters": 20,
-          "mean_raw_roots": 4533.833333333333,
+          "mean_raw_roots": 4514.0,
           "q": 0.31738282246826177,
-          "relative_error": 0.0004045307443365027,
+          "relative_error": 0.003971756398940865,
           "requested_budget": 4532,
           "tolerance": 0.03,
           "trials": 12
@@ -80,9 +80,9 @@
         "5666": {
           "budget_value": 0.25,
           "max_iters": 20,
-          "mean_raw_roots": 5705.083333333333,
+          "mean_raw_roots": 5705.75,
           "q": 0.4882812599511719,
-          "relative_error": 0.006897870337686733,
+          "relative_error": 0.007015531238969291,
           "requested_budget": 5666,
           "tolerance": 0.03,
           "trials": 12
@@ -90,9 +90,9 @@
         "6799": {
           "budget_value": 0.3,
           "max_iters": 20,
-          "mean_raw_roots": 6786.833333333333,
+          "mean_raw_roots": 6805.5,
           "q": 0.6835937599316406,
-          "relative_error": 0.0017894788449282202,
+          "relative_error": 0.0009560229445506692,
           "requested_budget": 6799,
           "tolerance": 0.03,
           "trials": 12
@@ -100,9 +100,9 @@
         "7932": {
           "budget_value": 0.35,
           "max_iters": 20,
-          "mean_raw_roots": 8089.166666666667,
+          "mean_raw_roots": 8073.75,
           "q": 0.9765625099023438,
-          "relative_error": 0.019814254496554082,
+          "relative_error": 0.017870650529500758,
           "requested_budget": 7932,
           "tolerance": 0.03,
           "trials": 12
@@ -110,9 +110,9 @@
         "9065": {
           "budget_value": 0.4,
           "max_iters": 20,
-          "mean_raw_roots": 8843.083333333334,
+          "mean_raw_roots": 8836.333333333334,
           "q": 1.1718750098828126,
-          "relative_error": 0.024480603052031556,
+          "relative_error": 0.02522522522522516,
           "requested_budget": 9065,
           "tolerance": 0.03,
           "trials": 12
@@ -129,6 +129,6 @@
   "q_min": 1e-08,
   "remove_self_loops": false,
   "sampler_name": "wilson",
-  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc/roman_empire_budget_sweep_static_normalised_weights_mc.yaml",
+  "source_config": "configs/active/grid/static/normalized/roman_empire__all_samplers_grid.yaml",
   "version": 1
 }
