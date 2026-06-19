@@ -1,0 +1,160 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "amazon/computers": {
+      "dataset_name": "amazon/computers",
+      "num_candidate_nodes": 13752,
+      "num_nodes": 13752,
+      "q_by_budget_count": {
+        "1375": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 1369.75,
+          "q": 0.9277343849072266,
+          "relative_error": 0.0038181818181818182,
+          "requested_budget": 1375,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "amazon/photo": {
+      "dataset_name": "amazon/photo",
+      "num_candidate_nodes": 7650,
+      "num_nodes": 7650,
+      "q_by_budget_count": {
+        "765": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 765.5,
+          "q": 1.0009765723999025,
+          "relative_error": 0.00065359477124183,
+          "requested_budget": 765,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "citeseer": {
+      "dataset_name": "citeseer",
+      "num_candidate_nodes": 3327,
+      "num_nodes": 3327,
+      "q_by_budget_count": {
+        "333": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 505.75,
+          "q": 0.024414072497558593,
+          "relative_error": 0.5187687687687688,
+          "requested_budget": 333,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "coauthor/cs": {
+      "dataset_name": "coauthor/cs",
+      "num_candidate_nodes": 18333,
+      "num_nodes": 18333,
+      "q_by_budget_count": {
+        "1833": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 1825.0,
+          "q": 0.3906250099609375,
+          "relative_error": 0.00436442989634479,
+          "requested_budget": 1833,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "coauthor/physics": {
+      "dataset_name": "coauthor/physics",
+      "num_candidate_nodes": 34493,
+      "num_nodes": 34493,
+      "q_by_budget_count": {
+        "3449": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 3516.75,
+          "q": 0.6835937599316406,
+          "relative_error": 0.01964337489127283,
+          "requested_budget": 3449,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "cora": {
+      "dataset_name": "cora",
+      "num_candidate_nodes": 2708,
+      "num_nodes": 2708,
+      "q_by_budget_count": {
+        "271": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 264.5,
+          "q": 0.12207032248779298,
+          "relative_error": 0.023985239852398525,
+          "requested_budget": 271,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "flickr": {
+      "dataset_name": "flickr",
+      "num_candidate_nodes": 89250,
+      "num_nodes": 89250,
+      "q_by_budget_count": {
+        "8925": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 8836.5,
+          "q": 0.6835937599316406,
+          "relative_error": 0.009915966386554622,
+          "requested_budget": 8925,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    },
+    "pubmed": {
+      "dataset_name": "pubmed",
+      "num_candidate_nodes": 19717,
+      "num_nodes": 19717,
+      "q_by_budget_count": {
+        "1972": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 1886.0,
+          "q": 0.14648438498535157,
+          "relative_error": 0.0436105476673428,
+          "requested_budget": 1972,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 12,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 4,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc_smoke/all_homophilous_gcn_static_normalised_weights_mc_smoke.yaml",
+  "version": 1
+}

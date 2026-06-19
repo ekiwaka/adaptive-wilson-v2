@@ -1,0 +1,79 @@
+run_name: citeseer_uniform_peak
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 1
+  deterministic: true
+
+output:
+  root: outputs
+  experiment_name: train
+  save_checkpoints: false
+  overwrite: true
+
+logging:
+  level: INFO
+  log_to_stdout: true
+
+dataset:
+  name: citeseer
+  root: data
+  split_idx: 0
+  feature_mode: enabled
+  standardize_features: false
+
+model:
+  hidden_dim: 128
+  num_layers: 2
+  dropout: 0.60
+  input_dropout: 0.20
+  aggr: mean
+  use_batch_norm: false
+  norm_type: none
+  residual: false
+  jk_mode: last
+  head_type: linear
+  head_hidden_dim: 128
+
+optimization:
+  epochs: 400
+  lr: 0.005
+  weight_decay: 0.001
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: false
+  class_weight_mode: effective_num
+  class_weight_beta: 0.999
+  label_smoothing: 0.0
+  early_stopping_patience: 80
+  min_epochs: 120
+  scheduler_factor: 0.5
+  scheduler_patience: 25
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: macro_f1
+
+sampling:
+  name: wilson
+  batch_size: 16
+  steps_per_epoch: 4
+  eval_batch_size: 512
+  num_hops: 2
+  sample_inference: false
+  inference_max_batches: 32
+  wilson:
+    backend: auto
+    q: 1.0
+    max_sampling_attempts: 8
+    allow_uniform_fill: true
+    make_undirected: false
+    remove_self_loops: false
+
+evaluation:
+  mode: full_graph
+  device: auto
+  batch_size: 2048
+  non_blocking: true
+  compute_train_metrics: true
+  track_test_metrics_during_training: false

@@ -1,0 +1,134 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "citeseer": {
+      "dataset_name": "citeseer",
+      "num_candidate_nodes": 3327,
+      "num_nodes": 3327,
+      "q_by_budget_count": {
+        "1164": {
+          "budget_value": 0.35,
+          "max_iters": 20,
+          "mean_raw_roots": 1138.25,
+          "q": 0.4882812599511719,
+          "relative_error": 0.022121993127147768,
+          "requested_budget": 1164,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1331": {
+          "budget_value": 0.4,
+          "max_iters": 20,
+          "mean_raw_roots": 1364.6666666666667,
+          "q": 0.781250009921875,
+          "relative_error": 0.02529426496368651,
+          "requested_budget": 1331,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1497": {
+          "budget_value": 0.45,
+          "max_iters": 20,
+          "mean_raw_roots": 1479.6666666666667,
+          "q": 0.9765625099023438,
+          "relative_error": 0.011578712981518541,
+          "requested_budget": 1497,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1664": {
+          "budget_value": 0.5,
+          "max_iters": 20,
+          "mean_raw_roots": 1678.8333333333333,
+          "q": 1.3671875098632813,
+          "relative_error": 0.008914262820512775,
+          "requested_budget": 1664,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1830": {
+          "budget_value": 0.55,
+          "max_iters": 20,
+          "mean_raw_roots": 1859.75,
+          "q": 1.9531250098046877,
+          "relative_error": 0.016256830601092898,
+          "requested_budget": 1830,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1996": {
+          "budget_value": 0.6,
+          "max_iters": 20,
+          "mean_raw_roots": 1987.75,
+          "q": 2.343750009765625,
+          "relative_error": 0.004133266533066132,
+          "requested_budget": 1996,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "333": {
+          "budget_value": 0.1,
+          "max_iters": 20,
+          "mean_raw_roots": 438.1666666666667,
+          "q": 9.537743163108826e-05,
+          "relative_error": 0.31581581581581586,
+          "requested_budget": 333,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "499": {
+          "budget_value": 0.15,
+          "max_iters": 20,
+          "mean_raw_roots": 513.0833333333334,
+          "q": 0.024414072497558593,
+          "relative_error": 0.028223112892451645,
+          "requested_budget": 499,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "665": {
+          "budget_value": 0.2,
+          "max_iters": 20,
+          "mean_raw_roots": 676.5,
+          "q": 0.09765625999023438,
+          "relative_error": 0.017293233082706767,
+          "requested_budget": 665,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "832": {
+          "budget_value": 0.25,
+          "max_iters": 20,
+          "mean_raw_roots": 823.25,
+          "q": 0.19531250998046876,
+          "relative_error": 0.010516826923076924,
+          "requested_budget": 832,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "998": {
+          "budget_value": 0.3,
+          "max_iters": 20,
+          "mean_raw_roots": 1003.0833333333334,
+          "q": 0.34179688496582034,
+          "relative_error": 0.005093520374081535,
+          "requested_budget": 998,
+          "tolerance": 0.03,
+          "trials": 12
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 20,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 12,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc/citeseer_budget_sweep_static_normalised_weights_mc.yaml",
+  "version": 1
+}

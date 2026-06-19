@@ -1,0 +1,43 @@
+study_name: local_cpu_sampler_study_gcn
+auto_use_best_q: true
+output_root: outputs
+manifest_name: local_cpu_sampler_study_gcn
+run_order:
+- diagnostics
+- search
+- q_sweep
+- train
+- benchmark
+- report
+diagnostics_configs:
+- configs/diagnostics/local_cpu_citation_sampler_diagnostics_gcn.yaml
+- configs/diagnostics/local_cpu_sbm_balanced_sampler_diagnostics_gcn.yaml
+- configs/diagnostics/local_cpu_sbm_imbalanced_sampler_diagnostics_gcn.yaml
+search_configs:
+- configs/search/local_cpu_cora_sampler_search_gcn.yaml
+- configs/search/local_cpu_citeseer_sampler_search_gcn.yaml
+- configs/search/local_cpu_sbm_balanced_sampler_search_gcn.yaml
+- configs/search/local_cpu_sbm_imbalanced_sampler_search_gcn.yaml
+q_sweep_configs:
+- configs/q_sweep/local_cpu_cora_wilson_q_sweep_gcn.yaml
+- configs/q_sweep/local_cpu_citeseer_wilson_q_sweep_gcn.yaml
+- configs/q_sweep/local_cpu_sbm_balanced_wilson_q_sweep_gcn.yaml
+- configs/q_sweep/local_cpu_sbm_imbalanced_wilson_q_sweep_gcn.yaml
+train_configs:
+- configs/train/local_cpu_final_gcn/cora_uniform.yaml
+- configs/train/local_cpu_final_gcn/cora_degree.yaml
+- configs/train/local_cpu_final_gcn/cora_wilson.yaml
+- configs/train/local_cpu_final_gcn/citeseer_uniform.yaml
+- configs/train/local_cpu_final_gcn/citeseer_degree.yaml
+- configs/train/local_cpu_final_gcn/citeseer_wilson.yaml
+- configs/train/local_cpu_final_gcn/sbm_balanced_uniform.yaml
+- configs/train/local_cpu_final_gcn/sbm_balanced_degree.yaml
+- configs/train/local_cpu_final_gcn/sbm_balanced_wilson.yaml
+- configs/train/local_cpu_final_gcn/sbm_imbalanced_uniform.yaml
+- configs/train/local_cpu_final_gcn/sbm_imbalanced_degree.yaml
+- configs/train/local_cpu_final_gcn/sbm_imbalanced_wilson.yaml
+benchmark_configs:
+- configs/benchmark/local_cpu_cora_sampler_benchmark_gcn.yaml
+- configs/benchmark/local_cpu_citeseer_sampler_benchmark_gcn.yaml
+- configs/benchmark/local_cpu_sbm_balanced_sampler_benchmark_gcn.yaml
+- configs/benchmark/local_cpu_sbm_imbalanced_sampler_benchmark_gcn.yaml

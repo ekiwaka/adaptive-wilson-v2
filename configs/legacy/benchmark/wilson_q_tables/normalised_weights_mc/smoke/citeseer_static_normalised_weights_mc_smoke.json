@@ -1,0 +1,34 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "citeseer": {
+      "dataset_name": "citeseer",
+      "num_candidate_nodes": 3327,
+      "num_nodes": 3327,
+      "q_by_budget_count": {
+        "333": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 505.75,
+          "q": 0.024414072497558593,
+          "relative_error": 0.5187687687687688,
+          "requested_budget": 333,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 12,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 4,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc_smoke/citeseer_static_normalised_weights_mc_smoke.yaml",
+  "version": 1
+}

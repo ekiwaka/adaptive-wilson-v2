@@ -1,0 +1,33 @@
+study_name: graph_visualization_citeseer
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 2
+  deterministic: true
+output:
+  root: outputs/active/local/checks
+  experiment_name: graph_visualization_citeseer
+  save_checkpoints: false
+  overwrite: true
+logging:
+  level: INFO
+  log_to_stdout: true
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  datasets:
+  - citeseer
+  feature_modes:
+  - enabled
+  split:
+    mode: public
+visualization:
+  max_nodes: 2000
+  layout: spring
+  node_size: 12
+  edge_alpha: 0.12
+  label_nodes: true
+  subgraph_method: random
+  label_with: label

@@ -1,0 +1,3 @@
+suite_name: local_all_datasets
+benchmark_config: configs/benchmark/local_all_datasets.yaml
+diagnostics_config: configs/diagnostics/local_all_datasets.yaml

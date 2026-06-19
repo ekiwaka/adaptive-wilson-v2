@@ -1,0 +1,33 @@
+study_name: dataset_metrics_cora_citeseer
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 1
+  deterministic: true
+
+output:
+  root: outputs
+  experiment_name: dataset_metrics
+  save_checkpoints: false
+  overwrite: true
+  append_timestamp: false
+
+logging:
+  level: INFO
+  log_to_stdout: true
+
+data:
+  root: data
+  split_idx: 0
+  standardize_features: false
+  split:
+    mode: predefined
+    val_ratio_of_remaining: 0.10
+  datasets: [cora, citeseer]
+  feature_modes: [enabled]
+
+metrics:
+  max_exact_path_nodes: 2000
+  spectral_num_communities: null
+  save_plots: true

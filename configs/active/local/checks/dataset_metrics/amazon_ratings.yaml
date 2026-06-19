@@ -1,0 +1,29 @@
+study_name: dataset_metrics_amazon_ratings
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 2
+  deterministic: true
+output:
+  root: outputs/active/local/checks
+  experiment_name: dataset_metrics_amazon_ratings
+  save_checkpoints: false
+  overwrite: true
+logging:
+  level: INFO
+  log_to_stdout: true
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  datasets:
+  - amazon-ratings
+  feature_modes:
+  - enabled
+  split:
+    mode: public
+metrics:
+  max_exact_path_nodes: 2000
+  spectral_num_communities: null
+  save_plots: true

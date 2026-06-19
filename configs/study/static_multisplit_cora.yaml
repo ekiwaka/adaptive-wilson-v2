@@ -1,0 +1,12 @@
+study_name: static_multisplit_cora_citeseer_only
+auto_use_best_q: false
+output_root: outputs
+manifest_name: static_multisplit_cora_citeseer_only
+run_order:
+- benchmark
+diagnostics_configs: []
+search_configs: []
+q_sweep_configs: []
+train_configs: []
+benchmark_configs:
+- configs/benchmark/static_multisplit/cora_static_multisplit_budget_sweep.yaml

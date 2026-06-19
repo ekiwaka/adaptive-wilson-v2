@@ -1,0 +1,117 @@
+study_name: minesweeper_sampler_split_static_weighted_smoke
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 1
+  deterministic: true
+output:
+  root: outputs
+  experiment_name: benchmark_smoke
+  save_checkpoints: false
+  overwrite: false
+  append_timestamp: true
+  timestamp_format: '%Y_%m_%d_%H_%M_%S'
+logging:
+  level: INFO
+  log_to_stdout: true
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  split:
+    mode: sampler
+    val_ratio_of_remaining: 0.1
+  datasets:
+  - minesweeper
+  feature_modes:
+  - enabled
+model:
+  family: gcn
+  hidden_dim: 96
+  num_layers: 2
+  dropout: 0.35
+  input_dropout: 0.05
+  aggr: mean
+  use_batch_norm: true
+  norm_type: layer
+  residual: false
+  jk_mode: last
+  head_type: linear
+  head_hidden_dim: 128
+optimization:
+  epochs: 2
+  lr: 0.003
+  weight_decay: 0.0005
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: false
+  class_weight_mode: effective_num
+  class_weight_beta: 0.999
+  label_smoothing: 0.0
+  early_stopping_patience: 1
+  min_epochs: 1
+  scheduler_factor: 0.5
+  scheduler_patience: 1
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: macro_f1
+  use_static_weight_normalization: true
+  static_weight_normalization_eps: 1.0e-12
+  strict_one_pass_wilson_weights: false
+sampling:
+  samplers:
+  - uniform
+  - degree
+  - wilson
+  modes:
+  - static
+  online_schedules:
+  - per_batch
+  budget_unit: ratio
+  budget_values:
+  - 0.1
+  batch_sizes:
+  - 64
+  num_hops:
+  - 2
+  steps_per_epoch: 1
+  eval_batch_size: 512
+  sample_inference: false
+  inference_max_batches: 8
+  cache_preprocessed_graph: true
+  reuse_cached_preprocessed_graph: true
+  cache_dirname: preprocessed_graphs
+  wilson:
+    backend: auto
+    q: null
+    redraw_on_shortfall: true
+    max_sampling_attempts: 3
+    allow_uniform_fill: true
+    make_undirected: false
+    remove_self_loops: false
+    auto_q_method: mean_degree
+    q_calibration_trials: 2
+    q_calibration_max_iters: 4
+    q_calibration_tolerance: 0.03
+    q_min: 1.0e-08
+    q_max: 100.0
+    q_calibration_seed: 1729
+    weight_estimation: monte_carlo_forests
+    num_weight_forests: 8
+    weight_estimation_seed: 314159
+    budget_targeting: legacy
+    target_budget_tolerance: 0.03
+    max_budget_search_steps: 4
+    budget_target_failure_policy: warn_and_continue
+benchmark:
+  runs: 1
+  base_seed: 0
+  parallel_workers: 1
+evaluation:
+  mode: full_graph
+  device: auto
+  batch_size: 1024
+  non_blocking: true
+  compute_train_metrics: true
+  track_test_metrics_during_training: false

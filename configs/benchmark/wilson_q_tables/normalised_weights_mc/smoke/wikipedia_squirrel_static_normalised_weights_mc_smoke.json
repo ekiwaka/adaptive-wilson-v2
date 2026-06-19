@@ -1,0 +1,34 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "wikipedia/squirrel": {
+      "dataset_name": "wikipedia/squirrel",
+      "num_candidate_nodes": 5201,
+      "num_nodes": 5201,
+      "q_by_budget_count": {
+        "520": {
+          "budget_value": 0.1,
+          "max_iters": 12,
+          "mean_raw_roots": 532.25,
+          "q": 0.6835937599316406,
+          "relative_error": 0.023557692307692307,
+          "requested_budget": 520,
+          "tolerance": 0.03,
+          "trials": 4
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 12,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 4,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/benchmark/sampler_split_normalised_weights_mc_smoke/wikipedia_squirrel_static_normalised_weights_mc_smoke.yaml",
+  "version": 1
+}
