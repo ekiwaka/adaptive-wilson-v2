@@ -1,0 +1,134 @@
+{
+  "backend": "auto",
+  "budget_unit": "ratio",
+  "datasets": {
+    "pubmed": {
+      "dataset_name": "pubmed",
+      "num_candidate_nodes": 19717,
+      "num_nodes": 19717,
+      "q_by_budget_count": {
+        "10844": {
+          "budget_value": 0.55,
+          "max_iters": 20,
+          "mean_raw_roots": 11108.583333333334,
+          "q": 2.7343750097265627,
+          "relative_error": 0.024399053239886937,
+          "requested_budget": 10844,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "11830": {
+          "budget_value": 0.6,
+          "max_iters": 20,
+          "mean_raw_roots": 11598.166666666666,
+          "q": 3.1250000096875,
+          "relative_error": 0.01959706959706965,
+          "requested_budget": 11830,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "1972": {
+          "budget_value": 0.1,
+          "max_iters": 20,
+          "mean_raw_roots": 1993.5833333333333,
+          "q": 0.15869141623413086,
+          "relative_error": 0.010944895199459055,
+          "requested_budget": 1972,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "2958": {
+          "budget_value": 0.15,
+          "max_iters": 20,
+          "mean_raw_roots": 3020.25,
+          "q": 0.26855469747314453,
+          "relative_error": 0.021044624746450306,
+          "requested_budget": 2958,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "3943": {
+          "budget_value": 0.2,
+          "max_iters": 20,
+          "mean_raw_roots": 3989.5833333333335,
+          "q": 0.3906250099609375,
+          "relative_error": 0.011814185476371667,
+          "requested_budget": 3943,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "4929": {
+          "budget_value": 0.25,
+          "max_iters": 20,
+          "mean_raw_roots": 4946.333333333333,
+          "q": 0.5371093849462891,
+          "relative_error": 0.0035166024210454513,
+          "requested_budget": 4929,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "5915": {
+          "budget_value": 0.3,
+          "max_iters": 20,
+          "mean_raw_roots": 5760.666666666667,
+          "q": 0.6835937599316406,
+          "relative_error": 0.02609185686108758,
+          "requested_budget": 5915,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "6901": {
+          "budget_value": 0.35,
+          "max_iters": 20,
+          "mean_raw_roots": 7106.583333333333,
+          "q": 0.9765625099023438,
+          "relative_error": 0.029790368545621365,
+          "requested_budget": 6901,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "7887": {
+          "budget_value": 0.4,
+          "max_iters": 20,
+          "mean_raw_roots": 7791.083333333333,
+          "q": 1.1718750098828126,
+          "relative_error": 0.01216136257977266,
+          "requested_budget": 7887,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "8873": {
+          "budget_value": 0.45,
+          "max_iters": 20,
+          "mean_raw_roots": 8909.416666666666,
+          "q": 1.56250000984375,
+          "relative_error": 0.004104211277658747,
+          "requested_budget": 8873,
+          "tolerance": 0.03,
+          "trials": 12
+        },
+        "9858": {
+          "budget_value": 0.5,
+          "max_iters": 20,
+          "mean_raw_roots": 9813.083333333334,
+          "q": 1.9531250098046877,
+          "relative_error": 0.00455636707919112,
+          "requested_budget": 9858,
+          "tolerance": 0.03,
+          "trials": 12
+        }
+      },
+      "split_mode": "sampler"
+    }
+  },
+  "make_undirected": false,
+  "q_calibration_max_iters": 20,
+  "q_calibration_tolerance": 0.03,
+  "q_calibration_trials": 12,
+  "q_max": 100.0,
+  "q_min": 1e-08,
+  "remove_self_loops": false,
+  "sampler_name": "wilson",
+  "source_config": "configs/active/grid/static/normalized/pubmed__all_samplers_grid.yaml",
+  "version": 1
+}

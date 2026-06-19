@@ -1,0 +1,8 @@
+Activate the environment:
+source /Users/karan/Internship/Environments/graph-tests/bin/activate
+
+Build Wilson backend:
+python build_wilson_extension.py build_ext --inplace
+
+Wilson building fix for the grid (currently)
+python build_wilson_extension_grid_temp.py build_ext --inplace
