@@ -1,6 +1,8 @@
 from __future__ import annotations
+import os
 import sys
 import time
+import tracemalloc
 from dataclasses import asdict, dataclass
 from typing import Any, Optional
 
@@ -25,17 +27,34 @@ from ..sampling.online_weights import compute_online_sample_weights
 from .preprocessing import resolve_budget_count
 
 
-def memory_snapshot_mb(device: torch.device) -> float:
-    """Return a lightweight memory snapshot in MB.
+def _bytes_to_mb(value: int | float) -> float:
+    return float(value) / (1024.0 ** 2)
 
-    CUDA runs use torch's allocated-memory counter. CPU runs use the process
-    resident-set high-water mark when the platform exposes resource.getrusage.
-    The value is diagnostic only; it is intended for sampler cost comparisons,
-    not exact allocator accounting.
+
+def _tensor_nbytes(tensor: Optional[torch.Tensor]) -> int:
+    if tensor is None:
+        return 0
+    return int(tensor.numel()) * int(tensor.element_size())
+
+
+def _current_process_rss_mb() -> float:
+    """Return current resident-set memory in MB when available.
+
+    On Linux this reads /proc/self/statm, which is a current RSS snapshot rather
+    than the ru_maxrss high-water mark. On platforms without /proc, we fall back
+    to ru_maxrss, so the value should then be interpreted as a peak.
     """
 
-    if device.type == 'cuda' and torch.cuda.is_available():
-        return float(torch.cuda.max_memory_allocated(device) / (1024.0 ** 2))
+    statm = '/proc/self/statm'
+    if os.path.exists(statm):
+        try:
+            with open(statm, 'r', encoding='utf-8') as handle:
+                parts = handle.read().strip().split()
+            if len(parts) >= 2:
+                resident_pages = int(parts[1])
+                return _bytes_to_mb(resident_pages * os.sysconf('SC_PAGE_SIZE'))
+        except Exception:
+            pass
 
     if resource is None:
         return 0.0
@@ -44,6 +63,83 @@ def memory_snapshot_mb(device: torch.device) -> float:
     if sys.platform == 'darwin':
         return usage / (1024.0 ** 2)
     return usage / 1024.0
+
+
+def _process_peak_rss_mb() -> float:
+    if resource is None:
+        return 0.0
+    usage = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    if sys.platform == 'darwin':
+        return usage / (1024.0 ** 2)
+    return usage / 1024.0
+
+
+def _cuda_memory_snapshot_mb(device: torch.device) -> dict[str, float]:
+    if device.type != 'cuda' or not torch.cuda.is_available():
+        return {
+            'cuda_allocated_mb': 0.0,
+            'cuda_reserved_mb': 0.0,
+            'cuda_max_allocated_mb': 0.0,
+            'cuda_max_reserved_mb': 0.0,
+        }
+    return {
+        'cuda_allocated_mb': _bytes_to_mb(torch.cuda.memory_allocated(device)),
+        'cuda_reserved_mb': _bytes_to_mb(torch.cuda.memory_reserved(device)),
+        'cuda_max_allocated_mb': _bytes_to_mb(torch.cuda.max_memory_allocated(device)),
+        'cuda_max_reserved_mb': _bytes_to_mb(torch.cuda.max_memory_reserved(device)),
+    }
+
+
+def memory_snapshot_details_mb(device: torch.device) -> dict[str, float]:
+    """Return granular process/Python/CUDA memory counters in MB.
+
+    CPU tensor allocations in PyTorch happen mostly in native code, so no single
+    counter can attribute all memory to an operation. This function therefore
+    combines current RSS, process peak RSS, Python tracemalloc counters, and CUDA
+    allocated/reserved counters for GPU runs.
+    """
+
+    if not tracemalloc.is_tracing():
+        tracemalloc.start()
+    py_current, py_peak = tracemalloc.get_traced_memory()
+    snapshot = {
+        'process_rss_mb': _current_process_rss_mb(),
+        'process_peak_rss_mb': _process_peak_rss_mb(),
+        'python_tracemalloc_current_mb': _bytes_to_mb(py_current),
+        'python_tracemalloc_peak_mb': _bytes_to_mb(py_peak),
+    }
+    snapshot.update(_cuda_memory_snapshot_mb(device))
+    return snapshot
+
+
+def memory_snapshot_mb(device: torch.device) -> float:
+    """Return the legacy memory snapshot used by older plots.
+
+    For CPU runs this remains the process RSS high-water mark in MB. For CUDA
+    runs this remains torch's max allocated GPU memory. Newer, more granular
+    counters are available via memory_snapshot_details_mb and batch_history.csv.
+    """
+
+    if device.type == 'cuda' and torch.cuda.is_available():
+        return float(torch.cuda.max_memory_allocated(device) / (1024.0 ** 2))
+    return _process_peak_rss_mb()
+
+
+def _subgraph_tensor_memory_mb(subgraph: BatchSubgraph) -> dict[str, float]:
+    x_mb = _bytes_to_mb(_tensor_nbytes(subgraph.x))
+    edge_index_mb = _bytes_to_mb(_tensor_nbytes(subgraph.edge_index))
+    y_mb = _bytes_to_mb(_tensor_nbytes(subgraph.y))
+    center_idx_mb = _bytes_to_mb(_tensor_nbytes(subgraph.center_local_idx))
+    node_ids_mb = _bytes_to_mb(_tensor_nbytes(subgraph.node_ids))
+    total_mb = x_mb + edge_index_mb + y_mb + center_idx_mb + node_ids_mb
+    return {
+        'subgraph_x_tensor_mb': x_mb,
+        'subgraph_edge_index_tensor_mb': edge_index_mb,
+        'subgraph_y_tensor_mb': y_mb,
+        'subgraph_center_local_idx_tensor_mb': center_idx_mb,
+        'subgraph_node_ids_tensor_mb': node_ids_mb,
+        'subgraph_tensor_total_mb': total_mb,
+    }
 
 
 @dataclass(slots=True)
@@ -518,7 +614,8 @@ def train_one_epoch(
 
     for step_idx in range(int(sampling.steps_per_epoch)):
         batch_start = time.perf_counter()
-        memory_before_mb = memory_snapshot_mb(device)
+        memory_before_details = memory_snapshot_details_mb(device)
+        memory_before_mb = float(memory_before_details.get('process_peak_rss_mb', 0.0))
 
         sample_start = time.perf_counter()
         sample_out = sampler.sample(dataset.train_nodes, budget, generator=generator)
@@ -530,6 +627,7 @@ def train_one_epoch(
         subgraph_start = time.perf_counter()
         subgraph = build_batch_subgraph(dataset.data, sample_out.center_nodes, num_hops, sample_out.metadata)
         subgraph_construction_time = time.perf_counter() - subgraph_start
+        subgraph_tensor_memory = _subgraph_tensor_memory_mb(subgraph)
 
         online_sample_weight = None
         online_weight_time = 0.0
@@ -562,6 +660,14 @@ def train_one_epoch(
         else:
             subgraph.stats.sampler_metadata['online_normalized_weighting_enabled'] = 0.0
 
+        online_weight_tensor_mb = _bytes_to_mb(_tensor_nbytes(online_sample_weight))
+        subgraph.stats.sampler_metadata.update(
+            {
+                **subgraph_tensor_memory,
+                'online_weight_tensor_mb': float(online_weight_tensor_mb),
+            }
+        )
+
         batch_stats.append(subgraph.stats)
 
         transfer_start = time.perf_counter()
@@ -573,6 +679,9 @@ def train_one_epoch(
         forward_loss_time = 0.0
         backward_time = 0.0
         optimizer_step_time = 0.0
+        logits_tensor_mb = 0.0
+        center_logits_tensor_mb = 0.0
+        center_target_tensor_mb = 0.0
 
         if scaler is not None and amp_enabled:
             forward_start = time.perf_counter()
@@ -580,6 +689,9 @@ def train_one_epoch(
                 logits = model(subgraph.x, subgraph.edge_index)
                 center_logits = logits[subgraph.center_local_idx]
                 center_target = subgraph.y[subgraph.center_local_idx]
+                logits_tensor_mb = _bytes_to_mb(_tensor_nbytes(logits))
+                center_logits_tensor_mb = _bytes_to_mb(_tensor_nbytes(center_logits))
+                center_target_tensor_mb = _bytes_to_mb(_tensor_nbytes(center_target))
                 loss = compute_positional_weighted_cross_entropy(
                     center_logits,
                     center_target,
@@ -609,6 +721,9 @@ def train_one_epoch(
             logits = model(subgraph.x, subgraph.edge_index)
             center_logits = logits[subgraph.center_local_idx]
             center_target = subgraph.y[subgraph.center_local_idx]
+            logits_tensor_mb = _bytes_to_mb(_tensor_nbytes(logits))
+            center_logits_tensor_mb = _bytes_to_mb(_tensor_nbytes(center_logits))
+            center_target_tensor_mb = _bytes_to_mb(_tensor_nbytes(center_target))
             loss = compute_positional_weighted_cross_entropy(
                 center_logits,
                 center_target,
@@ -632,7 +747,23 @@ def train_one_epoch(
                 optimizer_updates += 1
                 optimizer_step_time = time.perf_counter() - optimizer_start
 
-        memory_after_mb = memory_snapshot_mb(device)
+        memory_after_details = memory_snapshot_details_mb(device)
+        memory_after_mb = float(memory_after_details.get('process_peak_rss_mb', 0.0))
+        process_rss_delta_mb = float(memory_after_details.get('process_rss_mb', 0.0)) - float(
+            memory_before_details.get('process_rss_mb', 0.0)
+        )
+        process_peak_rss_delta_mb = float(memory_after_details.get('process_peak_rss_mb', 0.0)) - float(
+            memory_before_details.get('process_peak_rss_mb', 0.0)
+        )
+        python_tracemalloc_current_delta_mb = float(
+            memory_after_details.get('python_tracemalloc_current_mb', 0.0)
+        ) - float(memory_before_details.get('python_tracemalloc_current_mb', 0.0))
+        cuda_allocated_delta_mb = float(memory_after_details.get('cuda_allocated_mb', 0.0)) - float(
+            memory_before_details.get('cuda_allocated_mb', 0.0)
+        )
+        cuda_reserved_delta_mb = float(memory_after_details.get('cuda_reserved_mb', 0.0)) - float(
+            memory_before_details.get('cuda_reserved_mb', 0.0)
+        )
         total_batch_time = time.perf_counter() - batch_start
         model_compute_time = forward_loss_time + backward_time + optimizer_step_time
 
@@ -654,6 +785,35 @@ def train_one_epoch(
                 'memory_after_mb': float(memory_after_mb),
                 'memory_delta_mb': float(memory_after_mb - memory_before_mb),
                 'peak_memory_mb': float(memory_after_mb),
+                'process_rss_before_mb': float(memory_before_details.get('process_rss_mb', 0.0)),
+                'process_rss_after_mb': float(memory_after_details.get('process_rss_mb', 0.0)),
+                'process_rss_delta_mb': float(process_rss_delta_mb),
+                'process_peak_rss_before_mb': float(memory_before_details.get('process_peak_rss_mb', 0.0)),
+                'process_peak_rss_after_mb': float(memory_after_details.get('process_peak_rss_mb', 0.0)),
+                'process_peak_rss_delta_mb': float(process_peak_rss_delta_mb),
+                'python_tracemalloc_current_before_mb': float(memory_before_details.get('python_tracemalloc_current_mb', 0.0)),
+                'python_tracemalloc_current_after_mb': float(memory_after_details.get('python_tracemalloc_current_mb', 0.0)),
+                'python_tracemalloc_current_delta_mb': float(python_tracemalloc_current_delta_mb),
+                'python_tracemalloc_peak_before_mb': float(memory_before_details.get('python_tracemalloc_peak_mb', 0.0)),
+                'python_tracemalloc_peak_after_mb': float(memory_after_details.get('python_tracemalloc_peak_mb', 0.0)),
+                'cuda_allocated_before_mb': float(memory_before_details.get('cuda_allocated_mb', 0.0)),
+                'cuda_allocated_after_mb': float(memory_after_details.get('cuda_allocated_mb', 0.0)),
+                'cuda_allocated_delta_mb': float(cuda_allocated_delta_mb),
+                'cuda_reserved_before_mb': float(memory_before_details.get('cuda_reserved_mb', 0.0)),
+                'cuda_reserved_after_mb': float(memory_after_details.get('cuda_reserved_mb', 0.0)),
+                'cuda_reserved_delta_mb': float(cuda_reserved_delta_mb),
+                'cuda_max_allocated_after_mb': float(memory_after_details.get('cuda_max_allocated_mb', 0.0)),
+                'cuda_max_reserved_after_mb': float(memory_after_details.get('cuda_max_reserved_mb', 0.0)),
+                'subgraph_tensor_total_mb': float(subgraph_tensor_memory['subgraph_tensor_total_mb']),
+                'subgraph_x_tensor_mb': float(subgraph_tensor_memory['subgraph_x_tensor_mb']),
+                'subgraph_edge_index_tensor_mb': float(subgraph_tensor_memory['subgraph_edge_index_tensor_mb']),
+                'subgraph_y_tensor_mb': float(subgraph_tensor_memory['subgraph_y_tensor_mb']),
+                'subgraph_center_local_idx_tensor_mb': float(subgraph_tensor_memory['subgraph_center_local_idx_tensor_mb']),
+                'subgraph_node_ids_tensor_mb': float(subgraph_tensor_memory['subgraph_node_ids_tensor_mb']),
+                'online_weight_tensor_mb': float(online_weight_tensor_mb),
+                'logits_tensor_mb': float(logits_tensor_mb),
+                'center_logits_tensor_mb': float(center_logits_tensor_mb),
+                'center_target_tensor_mb': float(center_target_tensor_mb),
                 'reweighting_target_loss': float(reweighting_target == 'loss'),
                 'reweighting_target_gradient': float(reweighting_target == 'gradient'),
             }
@@ -691,6 +851,35 @@ def train_one_epoch(
                 'memory_after_mb': float(memory_after_mb),
                 'memory_delta_mb': float(memory_after_mb - memory_before_mb),
                 'peak_memory_mb': float(memory_after_mb),
+                'process_rss_before_mb': float(memory_before_details.get('process_rss_mb', 0.0)),
+                'process_rss_after_mb': float(memory_after_details.get('process_rss_mb', 0.0)),
+                'process_rss_delta_mb': float(process_rss_delta_mb),
+                'process_peak_rss_before_mb': float(memory_before_details.get('process_peak_rss_mb', 0.0)),
+                'process_peak_rss_after_mb': float(memory_after_details.get('process_peak_rss_mb', 0.0)),
+                'process_peak_rss_delta_mb': float(process_peak_rss_delta_mb),
+                'python_tracemalloc_current_before_mb': float(memory_before_details.get('python_tracemalloc_current_mb', 0.0)),
+                'python_tracemalloc_current_after_mb': float(memory_after_details.get('python_tracemalloc_current_mb', 0.0)),
+                'python_tracemalloc_current_delta_mb': float(python_tracemalloc_current_delta_mb),
+                'python_tracemalloc_peak_before_mb': float(memory_before_details.get('python_tracemalloc_peak_mb', 0.0)),
+                'python_tracemalloc_peak_after_mb': float(memory_after_details.get('python_tracemalloc_peak_mb', 0.0)),
+                'cuda_allocated_before_mb': float(memory_before_details.get('cuda_allocated_mb', 0.0)),
+                'cuda_allocated_after_mb': float(memory_after_details.get('cuda_allocated_mb', 0.0)),
+                'cuda_allocated_delta_mb': float(cuda_allocated_delta_mb),
+                'cuda_reserved_before_mb': float(memory_before_details.get('cuda_reserved_mb', 0.0)),
+                'cuda_reserved_after_mb': float(memory_after_details.get('cuda_reserved_mb', 0.0)),
+                'cuda_reserved_delta_mb': float(cuda_reserved_delta_mb),
+                'cuda_max_allocated_after_mb': float(memory_after_details.get('cuda_max_allocated_mb', 0.0)),
+                'cuda_max_reserved_after_mb': float(memory_after_details.get('cuda_max_reserved_mb', 0.0)),
+                'subgraph_tensor_total_mb': float(subgraph_tensor_memory['subgraph_tensor_total_mb']),
+                'subgraph_x_tensor_mb': float(subgraph_tensor_memory['subgraph_x_tensor_mb']),
+                'subgraph_edge_index_tensor_mb': float(subgraph_tensor_memory['subgraph_edge_index_tensor_mb']),
+                'subgraph_y_tensor_mb': float(subgraph_tensor_memory['subgraph_y_tensor_mb']),
+                'subgraph_center_local_idx_tensor_mb': float(subgraph_tensor_memory['subgraph_center_local_idx_tensor_mb']),
+                'subgraph_node_ids_tensor_mb': float(subgraph_tensor_memory['subgraph_node_ids_tensor_mb']),
+                'online_weight_tensor_mb': float(online_weight_tensor_mb),
+                'logits_tensor_mb': float(logits_tensor_mb),
+                'center_logits_tensor_mb': float(center_logits_tensor_mb),
+                'center_target_tensor_mb': float(center_target_tensor_mb),
                 'reweighting_target': str(reweighting_target),
                 'online_normalized_weighting_enabled': float(
                     batch_stats[-1].sampler_metadata.get('online_normalized_weighting_enabled', 0.0)
@@ -756,6 +945,18 @@ def train_one_epoch(
         'mean_model_compute_time': _mean_stat('model_compute_time'),
         'mean_total_batch_time': _mean_stat('total_batch_time'),
         'max_peak_memory_mb': float(max((stat.sampler_metadata.get('peak_memory_mb', 0.0) or 0.0) for stat in batch_stats) if batch_stats else 0.0),
+        'mean_process_rss_mb': _mean_stat('process_rss_after_mb'),
+        'max_process_rss_mb': float(max((stat.sampler_metadata.get('process_rss_after_mb', 0.0) or 0.0) for stat in batch_stats) if batch_stats else 0.0),
+        'mean_process_rss_delta_mb': _mean_stat('process_rss_delta_mb'),
+        'max_process_rss_delta_mb': float(max((stat.sampler_metadata.get('process_rss_delta_mb', 0.0) or 0.0) for stat in batch_stats) if batch_stats else 0.0),
+        'mean_python_tracemalloc_current_mb': _mean_stat('python_tracemalloc_current_after_mb'),
+        'max_python_tracemalloc_current_mb': float(max((stat.sampler_metadata.get('python_tracemalloc_current_after_mb', 0.0) or 0.0) for stat in batch_stats) if batch_stats else 0.0),
+        'mean_subgraph_tensor_total_mb': _mean_stat('subgraph_tensor_total_mb'),
+        'max_subgraph_tensor_total_mb': float(max((stat.sampler_metadata.get('subgraph_tensor_total_mb', 0.0) or 0.0) for stat in batch_stats) if batch_stats else 0.0),
+        'mean_online_weight_tensor_mb': _mean_stat('online_weight_tensor_mb'),
+        'mean_logits_tensor_mb': _mean_stat('logits_tensor_mb'),
+        'mean_cuda_allocated_mb': _mean_stat('cuda_allocated_after_mb'),
+        'max_cuda_allocated_mb': float(max((stat.sampler_metadata.get('cuda_allocated_after_mb', 0.0) or 0.0) for stat in batch_stats) if batch_stats else 0.0),
         'unique_center_node_ids': sorted(int(value) for value in unique_center_nodes),
     }
 

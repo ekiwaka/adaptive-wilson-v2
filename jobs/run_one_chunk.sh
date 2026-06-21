@@ -7,10 +7,10 @@ OUTROOT_BASE="${3:?Usage: bash jobs/run_one_chunk.sh START_SEED CONFIG OUTROOT_B
 TOTAL_SEEDS="${4:-10}"
 CHUNK_SIZE="${5:-10}"
 
+REPO_DIR="${REPO_DIR:-/home/krawat/compactdisk/users/krawat/adaptive-wilson/adaptive-wilson}"
+cd "${REPO_DIR}"
+
 END_SEED=$((START_SEED + TOTAL_SEEDS - 1))
-
-cd ~/adaptive-wilson/adaptive-wilson
-
 OUTROOT="${OUTROOT_BASE}/seeds_${START_SEED}_${END_SEED}"
 PARALLEL_WORKERS="${PARALLEL_WORKERS:-10}"
 
@@ -29,19 +29,22 @@ export PYTHONPATH="$(pwd)/src"
 CHUNK_LOG="${OUTROOT}/logs/seeds_${START_SEED}_${END_SEED}.job_${OAR_JOB_ID:-no_oar_id}.log"
 exec > >(tee -a "${CHUNK_LOG}") 2>&1
 
-echo "========================================"
-echo "Online chunk job"
-echo "Seeds: ${START_SEED}-${END_SEED}"
-echo "Host: $(hostname)"
-echo "OAR_JOB_ID: ${OAR_JOB_ID:-none}"
-echo "Started at: $(date)"
-echo "CONFIG=${CONFIG}"
-echo "OUTROOT=${OUTROOT}"
-echo "TOTAL_SEEDS=${TOTAL_SEEDS}"
-echo "CHUNK_SIZE=${CHUNK_SIZE}"
-echo "PARALLEL_WORKERS=${PARALLEL_WORKERS}"
-echo "PYTHONPATH=${PYTHONPATH}"
-echo "========================================"
+cat <<EOF
+========================================
+Online chunk job
+Seeds: ${START_SEED}-${END_SEED}
+Host: $(hostname)
+OAR_JOB_ID: ${OAR_JOB_ID:-none}
+Started at: $(date)
+REPO_DIR=${REPO_DIR}
+CONFIG=${CONFIG}
+OUTROOT=${OUTROOT}
+TOTAL_SEEDS=${TOTAL_SEEDS}
+CHUNK_SIZE=${CHUNK_SIZE}
+PARALLEL_WORKERS=${PARALLEL_WORKERS}
+PYTHONPATH=${PYTHONPATH}
+========================================
+EOF
 
 bash scripts/run_roazhon13_chunked_online.sh \
   "${CONFIG}" \

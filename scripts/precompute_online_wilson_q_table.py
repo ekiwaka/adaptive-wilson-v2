@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from statistics import mean, pstdev
@@ -35,6 +36,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--seed', type=int, default=None, help='Calibration seed. Defaults to runtime.seed.')
     parser.add_argument('--force', action='store_true', help='Overwrite an existing output JSON.')
     return parser.parse_args()
+
+
+def _tensor_sha256(values: torch.Tensor) -> str:
+    ordered = torch.sort(values.detach().cpu().to(torch.long)).values.contiguous()
+    return hashlib.sha256(ordered.numpy().astype('int64', copy=False).tobytes()).hexdigest()
+
+
+def _split_metadata(dataset: Any) -> dict[str, Any]:
+    train_nodes = dataset.train_nodes.detach().cpu().to(torch.long)
+    val_nodes = dataset.val_nodes.detach().cpu().to(torch.long)
+    test_nodes = dataset.test_nodes.detach().cpu().to(torch.long)
+    return {
+        'train_node_count': int(train_nodes.numel()),
+        'val_node_count': int(val_nodes.numel()),
+        'test_node_count': int(test_nodes.numel()),
+        'total_nodes': int(dataset.data.num_nodes),
+        'train_node_sha256': _tensor_sha256(train_nodes),
+        'val_node_sha256': _tensor_sha256(val_nodes),
+        'test_node_sha256': _tensor_sha256(test_nodes),
+    }
 
 
 def _budget_counts(config: BenchmarkConfig, train_count: int) -> list[int]:
@@ -129,6 +150,7 @@ def main() -> None:
                 )
                 dataset = load_dataset(dataset_cfg, device=device, seed=calibration_seed)
                 candidate_nodes = dataset.train_nodes.to(device=device, dtype=torch.long)
+                split_metadata = _split_metadata(dataset)
                 budgets = _budget_counts(config, int(candidate_nodes.numel()))
 
                 sampler = WilsonCenterSampler(
@@ -178,6 +200,7 @@ def main() -> None:
                         'q': float(q),
                         'target_budget': float(budget),
                         'train_node_count': float(candidate_nodes.numel()),
+                        'train_node_sha256': split_metadata['train_node_sha256'],
                         'num_nodes': float(dataset.data.num_nodes),
                         'validation_mean_roots': float(validation['mean_roots']),
                         'validation_std_roots': float(validation['std_roots']),
@@ -200,7 +223,12 @@ def main() -> None:
                     'feature_mode': feature_mode,
                     'split_idx': int(split_idx),
                     'split_mode': config.data.split.mode,
-                    'train_node_count': int(candidate_nodes.numel()),
+                    'split_file': config.data.split.split_file,
+                    'split_seed': int(config.data.split.seed),
+                    'split_train_ratio': float(config.data.split.train_ratio),
+                    'split_val_ratio': float(config.data.split.val_ratio),
+                    'split_test_ratio': float(config.data.split.test_ratio),
+                    **split_metadata,
                     'q_by_budget_count': rows,
                 }
 

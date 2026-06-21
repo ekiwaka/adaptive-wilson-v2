@@ -1,0 +1,137 @@
+study_name: pubmed_unweighted_online_expected_q_train0p30_val0p20
+experiment:
+  sampling_regime: online
+runtime:
+  device: cpu
+  device_policy: warn_and_fallback
+  seed: 0
+  torch_num_threads: 1
+  deterministic: true
+output:
+  root: outputs/active/grid/chunked/online_split_sweep/train0p30/pubmed/unweighted
+  experiment_name: pubmed_unweighted_online_expected_q_train0p30_val0p20
+  save_checkpoints: false
+  overwrite: false
+  append_timestamp: false
+logging:
+  level: INFO
+  log_to_stdout: true
+data:
+  root: data
+  split_idx: 0
+  standardize_features: true
+  datasets:
+  - pubmed
+  feature_modes:
+  - enabled
+  split:
+    mode: generated
+    train_ratio: 0.3
+    val_ratio: 0.2
+    test_ratio: 0.49999999999999994
+    seed: 0
+    split_file: outputs/splits/online_split_sweep/train0p30/pubmed/generated_train0p30_val0p20_seed0.pt
+    save_generated_split: true
+    reuse_existing_split: true
+model:
+  family: gcn
+  hidden_dim: 32
+  num_layers: 2
+  dropout: 0.5
+  input_dropout: 0.0
+  aggr: mean
+  use_batch_norm: false
+  norm_type: none
+  residual: false
+  jk_mode: last
+  head_type: linear
+  head_hidden_dim: 32
+optimization:
+  epochs: 50
+  lr: 0.005
+  weight_decay: 0.0005
+  use_amp: false
+  grad_clip_norm: 1.0
+  accumulation_steps: 1
+  use_class_weights: false
+  label_smoothing: 0.0
+  early_stopping_patience: 20
+  min_epochs: 30
+  scheduler_factor: 0.5
+  scheduler_patience: 3
+  scheduler_min_lr: 1.0e-05
+  monitor_metric: macro_f1
+  use_static_weight_normalization: false
+  use_normalized_weights: false
+  normalize_weights: true
+  weight_normalization: mean_one
+  static_weight_normalization_eps: 1.0e-12
+  strict_one_pass_wilson_weights: true
+  reweighting_target: loss
+sampling:
+  samplers:
+  - uniform
+  - degree
+  - adaptive_wilson
+  modes:
+  - online
+  online_schedules:
+  - per_batch
+  budget_unit: count
+  budget_values:
+  - 32
+  - 64
+  - 128
+  - 256
+  - 512
+  batch_sizes:
+  - 64
+  num_hops:
+  - 2
+  steps_per_epoch: 50
+  eval_batch_size: 512
+  sample_inference: false
+  inference_max_batches: 128
+  cache_preprocessed_graph: true
+  reuse_cached_preprocessed_graph: true
+  cache_dirname: preprocessed_graphs
+  wilson:
+    backend: auto
+    q: null
+    redraw_on_shortfall: false
+    allow_uniform_fill: false
+    auto_q_method: precomputed_table
+    q_estimation: null
+    weight_estimation: monte_carlo_forests
+    num_weight_forests: 64
+    budget_targeting_enabled: false
+    target_budget_tolerance: 0.03
+    max_budget_search_steps: 24
+    avoid_padding: true
+    avoid_capping: true
+    budget_target_failure_policy: warn_and_continue
+    max_sampling_attempts: 1
+    make_undirected: false
+    remove_self_loops: false
+    budget_targeting: expected_budget
+    q_table_path: outputs/precomputed/online_expected_q/split_sweep/train0p30/pubmed/unweighted/pubmed_unweighted_train0p30_val0p20_seed0_q_table.json
+    q_table_missing_policy: error
+    q_calibration_trials: 32
+  adaptive_wilson:
+    q_i_mode: alpha
+    alpha: 1.0
+    alpha_grid: []
+    budget_grid_mode: fixed_budget
+    q_mode: precomputed_budget_q
+benchmark:
+  runs: 10
+  base_seed: 0
+  parallel_workers: 10
+  save_plots: false
+evaluation:
+  mode: exact_batched
+  device: cpu
+  batch_size: 512
+  non_blocking: true
+  compute_train_metrics: true
+  track_test_metrics_during_training: true

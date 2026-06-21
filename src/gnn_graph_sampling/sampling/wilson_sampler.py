@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from statistics import mean, pstdev
 from typing import Any, Optional
+import hashlib
 import json
 from pathlib import Path
 
@@ -104,6 +105,58 @@ class WilsonCenterSampler(CenterSampler):
         ratio = min(max(ratio, 1e-4), 1.0 - 1e-4)
         return self._mean_degree * ratio / (1.0 - ratio)
 
+    @staticmethod
+    def _candidate_nodes_sha256(candidate_nodes: torch.Tensor) -> str:
+        ordered = torch.sort(candidate_nodes.detach().cpu().to(torch.long)).values.contiguous()
+        return hashlib.sha256(ordered.numpy().astype('int64', copy=False).tobytes()).hexdigest()
+
+    def _q_table_dataset_key(self, datasets: dict[str, Any]) -> str:
+        dataset_key = self.dataset_name
+        if dataset_key is None:
+            if len(datasets) == 1:
+                return str(next(iter(datasets.keys())))
+            raise ValueError(
+                'Wilson q table contains multiple datasets, but dataset_name was not supplied to the sampler.'
+            )
+        if dataset_key not in datasets:
+            available = ', '.join(sorted(str(k) for k in datasets.keys()))
+            raise KeyError(f'Dataset {dataset_key!r} not found in Wilson q table. Available: {available}')
+        return str(dataset_key)
+
+    def _validate_q_table_split_metadata(
+        self,
+        *,
+        dataset_entry: dict[str, Any],
+        budget_row: dict[str, Any] | None,
+        candidate_nodes: Optional[torch.Tensor],
+        budget: int,
+    ) -> None:
+        if candidate_nodes is None:
+            return
+
+        candidate_count = int(candidate_nodes.numel())
+        expected_count = dataset_entry.get('train_node_count')
+        if expected_count is not None and int(round(float(expected_count))) != candidate_count:
+            raise ValueError(
+                'Wilson q table train-node count does not match the current split: '
+                f'q_table={int(round(float(expected_count)))}, current={candidate_count}, '
+                f'budget={int(budget)}, dataset={self.dataset_name!r}, q_table_path={self.q_table_path!r}. '
+                'Recompute the q table for this exact split.'
+            )
+
+        expected_hash = dataset_entry.get('train_node_sha256')
+        if expected_hash is None and isinstance(budget_row, dict):
+            expected_hash = budget_row.get('train_node_sha256')
+        if expected_hash is not None:
+            actual_hash = self._candidate_nodes_sha256(candidate_nodes)
+            if str(expected_hash) != actual_hash:
+                raise ValueError(
+                    'Wilson q table train-node hash does not match the current split: '
+                    f'q_table={expected_hash}, current={actual_hash}, '
+                    f'budget={int(budget)}, dataset={self.dataset_name!r}, q_table_path={self.q_table_path!r}. '
+                    'Do not reuse q tables across split-ratio experiments; recompute for this split.'
+                )
+
     def _load_q_table_payload(self) -> dict[str, Any]:
         if self._q_table_cache is not None:
             return self._q_table_cache
@@ -121,25 +174,18 @@ class WilsonCenterSampler(CenterSampler):
         self._q_table_cache = payload
         return payload
 
-    def _lookup_precomputed_q(self, budget: int) -> float:
+    def _lookup_precomputed_q(self, budget: int, candidate_nodes: Optional[torch.Tensor] = None) -> float:
         payload = self._load_q_table_payload()
         datasets = payload.get('datasets')
         if not isinstance(datasets, dict) or not datasets:
             raise ValueError('Wilson q table is missing a non-empty datasets object.')
 
-        dataset_key = self.dataset_name
-        if dataset_key is None:
-            if len(datasets) == 1:
-                dataset_key = next(iter(datasets.keys()))
-            else:
-                raise ValueError(
-                    'Wilson q table contains multiple datasets, but dataset_name was not supplied to the sampler.'
-                )
-        if dataset_key not in datasets:
-            available = ', '.join(sorted(str(k) for k in datasets.keys()))
-            raise KeyError(f'Dataset {dataset_key!r} not found in Wilson q table. Available: {available}')
+        dataset_key = self._q_table_dataset_key(datasets)
+        dataset_entry = datasets[dataset_key]
+        if not isinstance(dataset_entry, dict):
+            raise ValueError(f'Wilson q table dataset entry for {dataset_key!r} must be an object.')
 
-        table = datasets[dataset_key].get('q_by_budget_count')
+        table = dataset_entry.get('q_by_budget_count')
         if not isinstance(table, dict):
             raise ValueError(f'Wilson q table for {dataset_key!r} is missing q_by_budget_count.')
         row = table.get(str(int(budget)))
@@ -148,6 +194,13 @@ class WilsonCenterSampler(CenterSampler):
             raise KeyError(
                 f'Budget {int(budget)} not found in Wilson q table for {dataset_key!r}. Available: {available}'
             )
+        budget_row = row if isinstance(row, dict) else None
+        self._validate_q_table_split_metadata(
+            dataset_entry=dataset_entry,
+            budget_row=budget_row,
+            candidate_nodes=candidate_nodes,
+            budget=int(budget),
+        )
         if isinstance(row, dict):
             q = row.get('q')
         else:
@@ -159,12 +212,12 @@ class WilsonCenterSampler(CenterSampler):
             raise ValueError(f'Wilson q table contains non-positive q={q} for budget {int(budget)}.')
         return q
 
-    def _resolve_initial_q(self, budget: int) -> float:
+    def _resolve_initial_q(self, budget: int, candidate_nodes: Optional[torch.Tensor] = None) -> float:
         if self.q_override is not None:
             return float(self.q_override)
         if self.auto_q_method == 'precomputed_table':
             try:
-                return self._lookup_precomputed_q(int(budget))
+                return self._lookup_precomputed_q(int(budget), candidate_nodes=candidate_nodes)
             except Exception:
                 if self.q_table_missing_policy == 'error':
                     raise
@@ -248,7 +301,7 @@ class WilsonCenterSampler(CenterSampler):
         low = float(self.q_min)
         high = float(max(self.q_max, self.q_min * 2.0))
 
-        initial_q = float(self._resolve_initial_q(int(budget)))
+        initial_q = float(self._resolve_initial_q(int(budget), candidate_nodes=candidate_nodes))
         best_q = initial_q
         best_mean = self._estimate_mean_root_count(candidate_nodes, best_q, seed=seed)
         best_err = abs(best_mean - target) / max(target, 1.0)
@@ -428,7 +481,7 @@ class WilsonCenterSampler(CenterSampler):
         if not isinstance(q_value, (int, float)):
             q_value = sample_metadata.get('q_initial')
         if not isinstance(q_value, (int, float)):
-            q_value = self._resolve_initial_q(int(budget))
+            q_value = self._resolve_initial_q(int(budget), candidate_nodes=candidate_nodes)
 
         candidate_nodes = candidate_nodes.to(device=self.device, dtype=torch.long)
         center_nodes_cpu = center_nodes.detach().cpu().to(torch.long)
@@ -569,7 +622,7 @@ class WilsonCenterSampler(CenterSampler):
         requested budget is interpreted as an expected mini-batch size used to
         resolve q, not as an exact final batch-size constraint.
         """
-        q_initial = float(self._resolve_initial_q(int(budget)))
+        q_initial = float(self._resolve_initial_q(int(budget), candidate_nodes=candidate_nodes))
         roots = self._draw_eligible_roots(candidate_nodes, q_initial, generator=generator)
         realized = int(roots.numel())
         if realized <= 0:
@@ -605,7 +658,7 @@ class WilsonCenterSampler(CenterSampler):
         return SamplerOutput(center_nodes=roots, metadata=metadata)
 
     def _sample_legacy(self, candidate_nodes: torch.Tensor, budget: int, *, generator: torch.Generator) -> SamplerOutput:
-        q_initial = self._resolve_initial_q(budget)
+        q_initial = self._resolve_initial_q(budget, candidate_nodes=candidate_nodes)
         current_q = q_initial
 
         self._selected_mask.zero_()
